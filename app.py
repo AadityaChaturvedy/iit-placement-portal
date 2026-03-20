@@ -1,26 +1,15 @@
 from flask import Flask, request, flash, render_template
+from models import db
+from config import Config
 
 app = Flask(__name__)
 app.secret_key = 'testkey'
+app.config.from_object(Config)
 
-USERS = {
-    "admin@gmail.com": "admin123"
-}
+db.init_app(app)
 
-@app.route('/login', methods=['GET','POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('email')
-        password = request.form.get('password')
-
-        if username in USERS and USERS[username] == password:
-            flash(f"Welcome, {username}!", 'success')
-            return "Login Successful"
-        else:
-            flash('Invalid username or password.', 'danger')
-
-    return render_template('login.html')
-
+def index():
+    return "Database setup done."
 
 if __name__ == '__main__':
     app.run(debug=True)
