@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Jobs{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Manage Placement Drives</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Jobs</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Placement Drives ({{ jobs|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if jobs %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Job Title</th>
+                                <th>Company</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Applications</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr>
+                                <td>{{ job.id }}</td>
+                                <td>{{ job.job_title }}</td>
+                                <td>{{ job.company.company_name }}</td>
+                                <td>{{ job.application_deadline }}</td>
+                                <td>
+                                    {% if job.status == 'Approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif job.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif job.status == 'Closed' %}
+                                        <span class="badge bg-secondary">Closed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ job.applications|length }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        {% if job.status != 'Approved' %}
+                                        <a href="{{ url_for('admin_approve_job', job_id=job.id) }}"
+                                           class="btn btn-success"
+                                           onclick="return confirm('Approve this job posting?')">Approve</a>
+                                        {% endif %}
+
+                                        {% if job.status != 'Rejected' %}
+                                        <a href="{{ url_for('admin_reject_job', job_id=job.id) }}"
+                                           class="btn btn-warning"
+                                           onclick="return confirm('Reject this job posting?')">Reject</a>
+                                        {% endif %}
+
+                                        <a href="{{ url_for('admin_delete_job', job_id=job.id) }}"
+                                           class="btn btn-danger"
+                                           onclick="return confirm('Delete this job permanently?')">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    No placement drives found.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

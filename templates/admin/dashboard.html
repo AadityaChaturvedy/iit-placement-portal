@@ -3,15 +3,90 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
         <h2>Admin Dashboard</h2>
         <p class="text-muted">Welcome, {{ session.username }}!</p>
         <hr>
-        
-        <div class="alert alert-success">
-            <h4>Authentication & RBAC Implemented Successfully!</h4>
-            <p>This dashboard is only accessible to admin users.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Students</h5>
+                <h2>{{ total_students }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Companies</h5>
+                <h2>{{ total_companies }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Job Postings</h5>
+                <h2>{{ total_job_positions }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">Applications</h5>
+                <h2>{{ total_applications }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Pending Company Approvals</h5>
+            </div>
+            <div class="card-body">
+                <h3>{{ pending_companies }}</h3>
+                <a href="{{ url_for('admin_companies') }}" class="btn btn-warning">Review Companies</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Pending Job Approvals</h5>
+            </div>
+            <div class="card-body">
+                <h3>{{ pending_jobs }}</h3>
+                <a href="{{ url_for('admin_jobs') }}" class="btn btn-info">Review Jobs</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('admin_companies') }}" class="btn btn-outline-primary me-2">Manage Companies</a>
+                <a href="{{ url_for('admin_students') }}" class="btn btn-outline-success me-2">Manage Students</a>
+                <a href="{{ url_for('admin_jobs') }}" class="btn btn-outline-info me-2">Manage Jobs</a>
+                <a href="{{ url_for('admin_applications') }}" class="btn btn-outline-warning">View Applications</a>
+            </div>
         </div>
     </div>
 </div>

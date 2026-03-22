@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from models import db, Admin, Company, Student
+from models import db, Admin, Company, Student, JobPosition, Application, Placement
 from config import Config
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from sqlalchemy import or_
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -227,7 +228,185 @@ def company_register():
 @login_required
 @role_required('admin')
 def admin_dashboard():
-    return render_template('admin/dashboard.html')
+    total_students = Student.query.count()
+    total_companies = Company.query.count()
+    total_job_positions = JobPosition.query.count()
+    total_applications = Application.query.count()
+
+    pending_companies = Company.query.filter_by(approval_status='Pending').count()
+    pending_jobs = JobPosition.query.filter_by(status='Pending').count()
+
+    return render_template(
+        'admin/dashboard.html',
+        total_students=total_students,
+        total_companies=total_companies,
+        total_job_positions=total_job_positions,
+        total_applications=total_applications,
+        pending_companies=pending_companies,
+        pending_jobs=pending_jobs
+    )
+
+# Redirecting to company page of admin dashboard
+@app.route('/admin/companies')
+@login_required
+@role_required('admin')
+def admin_companies():
+    search_query = request.args.get('search', '').strip()
+
+    if search_query:
+        companies = Company.query.filter(
+            or_(
+                Company.company_name.ilike(f'%{search_query}%'),
+                Company.industry.ilike(f'%{search_query}%')
+            )
+        ).all()
+    else:
+        companies = Company.query.all()
+
+    return render_template('admin/companies.html', companies=companies, search_query=search_query)
+
+# Company approval on admin dashboard
+@app.route('/admin/company/approve/<int:company_id>')
+@login_required
+@role_required('admin')
+def admin_approve_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    company.approval_status = 'Approved'
+    db.session.commit()
+    flash(f'Company "{company.company_name}" has been approved!', 'success')
+    return redirect(url_for('admin_companies'))
+
+# Company rejection on admin dashboard
+@app.route('/admin/company/reject/<int:company_id>')
+@login_required
+@role_required('admin')
+def admin_reject_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    company.approval_status = 'Rejected'
+    db.session.commit()
+    flash(f'Company "{company.company_name}" has been rejected.', 'warning')
+    return redirect(url_for('admin_companies'))
+
+# Company blacklisting on admin dashboard
+@app.route('/admin/company/blacklist/<int:company_id>')
+@login_required
+@role_required('admin')
+def admin_blacklist_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    company.is_blacklisted = not company.is_blacklisted
+    db.session.commit()
+
+    status = 'blacklisted' if company.is_blacklisted else 'activated'
+    flash(f'Company "{company.company_name}" has been {status}.', 'info')
+    return redirect(url_for('admin_companies'))
+
+# Deleting a company on the admin dashboard
+@app.route('/admin/company/delete/<int:company_id>')
+@login_required
+@role_required('admin')
+def admin_delete_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    company_name = company.company_name
+    db.session.delete(company)
+    db.session.commit()
+    flash(f'Company "{company_name}" has been deleted.', 'danger')
+    return redirect(url_for('admin_companies'))
+
+# Managing students on the admin dashboard
+@app.route('/admin/students')
+@login_required
+@role_required('admin')
+def admin_students():
+    search_query = request.args.get('search', '').strip()
+
+    if search_query:
+        students = Student.query.filter(
+            or_(
+                Student.name.ilike(f'%{search_query}%'),
+                Student.student_id.ilike(f'%{search_query}%'),
+                Student.email.ilike(f'%{search_query}%'),
+                Student.contact.ilike(f'%{search_query}%')
+            )
+        ).all()
+    else:
+        students = Student.query.all()
+
+    return render_template('admin/students.html', students=students, search_query=search_query)
+
+# Blacklisting a student using the admin dashboard
+@app.route('/admin/student/blacklist/<string:student_id>')
+@login_required
+@role_required('admin')
+def admin_blacklist_student(student_id):
+    student = Student.query.get_or_404(student_id)
+    student.is_blacklisted = not student.is_blacklisted
+    db.session.commit()
+
+    status = 'blacklisted' if student.is_blacklisted else 'activated'
+    flash(f'Student "{student.name}" has been {status}.', 'info')
+    return redirect(url_for('admin_students'))
+
+# Deleting a student using the admin dashboard
+@app.route('/admin/student/delete/<string:student_id>')
+@login_required
+@role_required('admin')
+def admin_delete_student(student_id):
+    student = Student.query.get_or_404(student_id)
+    student_name = student.name
+    db.session.delete(student)
+    db.session.commit()
+    flash(f'Student "{student_name}" has been deleted.', 'danger')
+    return redirect(url_for('admin_students'))
+
+# Managing jobs on the admin dashboard
+@app.route('/admin/jobs')
+@login_required
+@role_required('admin')
+def admin_jobs():
+    jobs = JobPosition.query.all()
+    return render_template('admin/jobs.html', jobs=jobs)
+
+# Job approval on the admin dashboard
+@app.route('/admin/job/approve/<int:job_id>')
+@login_required
+@role_required('admin')
+def admin_approve_job(job_id):
+    job = JobPosition.query.get_or_404(job_id)
+    job.status = 'Approved'
+    db.session.commit()
+    flash(f'Job "{job.job_title}" has been approved!', 'success')
+    return redirect(url_for('admin_jobs'))
+
+# Job rejection on the admin dashboard
+@app.route('/admin/job/reject/<int:job_id>')
+@login_required
+@role_required('admin')
+def admin_reject_job(job_id):
+    job = JobPosition.query.get_or_404(job_id)
+    job.status = 'Rejected'
+    db.session.commit()
+    flash(f'Job "{job.job_title}" has been rejected.', 'warning')
+    return redirect(url_for('admin_jobs'))
+
+# Job deletion on the admin dashboard
+@app.route('/admin/job/delete/<int:job_id>')
+@login_required
+@role_required('admin')
+def admin_delete_job(job_id):
+    job = JobPosition.query.get_or_404(job_id)
+    job_title = job.job_title
+    db.session.delete(job)
+    db.session.commit()
+    flash(f'Job "{job_title}" has been deleted.', 'danger')
+    return redirect(url_for('admin_jobs'))
+
+# Managing applications on the admin dashboard
+@app.route('/admin/applications')
+@login_required
+@role_required('admin')
+def admin_applications():
+    applications = Application.query.order_by(Application.application_date.desc()).all()
+    return render_template('admin/applications.html', applications=applications)
 
 # Company Dashboard
 @app.route('/company/dashboard')
