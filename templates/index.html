@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Placement Portal{% endblock %}
+
+{% block content %}
+<div class="row mt-5">
+    <div class="col-md-8 mx-auto text-center">
+        <h1>Welcome to Placement Portal</h1>
+        <p class="lead">Manage campus recruitment activities efficiently</p>
+        
+        {% if not session.user_id %}
+        <div class="mt-4">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-2">Login</a>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-success btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Register
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('student_register') }}">As Student</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('company_register') }}">As Company</a></li>
+                </ul>
+            </div>
+        </div>
+        {% else %}
+        <div class="mt-4">
+            {% if session.user_role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+            {% elif session.user_role == 'company' %}
+                <a href="{{ url_for('company_dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+            {% elif session.user_role == 'student' %}
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
