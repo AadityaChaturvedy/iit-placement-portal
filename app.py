@@ -10,7 +10,6 @@ app.config.from_object(Config)
 
 db.init_app(app)
 
-"""Making login requirement compulsory"""
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -20,24 +19,22 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-"""Making role requirement compulsory"""
 def role_required(role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if 'user_role' not in session or session['user_role'] != role:
+            if session.get('user_role') != role:
                 flash('You do not have permission to access this page.', 'danger')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
 
-# Index route
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Login route for all users
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -49,9 +46,6 @@ def login():
             flash('Please fill all fields.', 'danger')
             return render_template('login.html')
         
-        user = None
-        
-        # Admin login and validation
         if role == 'admin':
             user = Admin.query.filter_by(email=email).first()
             if user and check_password_hash(user.password_hash, password):
@@ -60,10 +54,8 @@ def login():
                 session['username'] = user.username
                 flash(f'Welcome Admin {user.username}!', 'success')
                 return redirect(url_for('admin_dashboard'))
-            else:
-                flash('Invalid admin credentials.', 'danger')
+            flash('Invalid admin credentials.', 'danger')
 
-        # Company Login, verification, blacklisting and redirection based on approval status
         elif role == 'company':
             user = Company.query.filter_by(email=email).first()
             if user and check_password_hash(user.password_hash, password):
@@ -71,21 +63,20 @@ def login():
                     flash('Your account has been blacklisted. Contact admin.', 'danger')
                     return render_template('login.html')
                 
-                session['user_id'] = user.id
-                session['user_role'] = 'company'
-                session['username'] = user.company_name
-                session['approval_status'] = user.approval_status
-                
+                session.update({
+                    'user_id': user.id,
+                    'user_role': 'company',
+                    'username': user.company_name,
+                    'approval_status': user.approval_status
+                })
                 flash(f'Welcome {user.company_name}!', 'success')
                 
                 if user.approval_status == 'Approved':
                     return redirect(url_for('company_dashboard'))
-                else:
-                    return redirect(url_for('company_pending'))
-            else:
-                flash('Invalid company credentials.', 'danger')
+                return redirect(url_for('company_pending'))
+                
+            flash('Invalid company credentials.', 'danger')
         
-        # Student Login, verification, blacklisting check and redirection
         elif role == 'student':
             user = Student.query.filter_by(email=email).first()
             if user and check_password_hash(user.password_hash, password):
@@ -93,17 +84,18 @@ def login():
                     flash('Your account has been blacklisted. Contact admin.', 'danger')
                     return render_template('login.html')
                 
-                session['user_id'] = user.student_id
-                session['user_role'] = 'student'
-                session['username'] = user.name
+                session.update({
+                    'user_id': user.student_id,
+                    'user_role': 'student',
+                    'username': user.name
+                })
                 flash(f'Welcome {user.name}!', 'success')
                 return redirect(url_for('student_dashboard'))
-            else:
-                flash('Invalid student credentials.', 'danger')
+                
+            flash('Invalid student credentials.', 'danger')
     
     return render_template('login.html')
 
-# Logging out, clearing session, redirecting to index and making login compulsory 
 @app.route('/logout')
 @login_required
 def logout():
@@ -111,59 +103,48 @@ def logout():
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('index'))
 
-# Student registration
 @app.route('/student/register', methods=['GET', 'POST'])
 def student_register():
     if request.method == 'POST':
-
-        # Getting data from the form
-        student_id = request.form.get('student_id')
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        contact = request.form.get('contact')
-        degree = request.form.get('degree')
-        branch = request.form.get('branch')
-        cgpa = request.form.get('cgpa')
-        graduation_year = request.form.get('graduation_year')
-        skills = request.form.get('skills')
+        form = request.form
+        student_id = form.get('student_id')
+        name = form.get('name')
+        email = form.get('email')
+        password = form.get('password')
+        confirm_password = form.get('confirm_password')
+        contact = form.get('contact')
         
-        # Validating if all the values are present in the form
-        if not all([student_id, name, email, password, confirm_password, contact]):
+        # basic validations
+        required_fields = [student_id, name, email, password, confirm_password, contact]
+        if not all(required_fields):
             flash('Please fill all required fields.', 'danger')
             return render_template('student_register.html')
         
-        # Confirming if the entered password and confirm password are same
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
             return render_template('student_register.html')
         
-        # Checking if student already exists
-        if Student.query.filter_by(email=email).first():
-            flash('Email already registered.', 'danger')
+        if Student.query.filter((Student.email == email) | (Student.student_id == student_id)).first():
+            flash('Student ID or Email already registered.', 'danger')
             return render_template('student_register.html')
         
-        # Checking if student already registered with the same student ID
-        if Student.query.filter_by(student_id=student_id).first():
-            flash('Student ID already registered.', 'danger')
-            return render_template('student_register.html')
-        
-        # Creating new student and adding basic details of the student to the database
+        # save student
+        cgpa_val = float(form.get('cgpa')) if form.get('cgpa') else None
+        grad_year = int(form.get('graduation_year')) if form.get('graduation_year') else None
+
         new_student = Student(
             student_id=student_id,
             name=name,
             email=email,
             password_hash=generate_password_hash(password),
             contact=contact,
-            degree=degree,
-            branch=branch,
-            cgpa=float(cgpa) if cgpa else None,
-            graduation_year=int(graduation_year) if graduation_year else None,
-            skills=skills
+            degree=form.get('degree'),
+            branch=form.get('branch'),
+            cgpa=cgpa_val,
+            graduation_year=grad_year,
+            skills=form.get('skills')
         )
         
-        # Adding the new student to the database and commiting the changes
         db.session.add(new_student)
         db.session.commit()
         
@@ -172,49 +153,36 @@ def student_register():
     
     return render_template('student_register.html')
 
-# Company registration
 @app.route('/company/register', methods=['GET', 'POST'])
 def company_register():
     if request.method == 'POST':
-
-        # Getting data from the form
-        company_name = request.form.get('company_name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        hr_contact = request.form.get('hr_contact')
-        website = request.form.get('website')
-        industry = request.form.get('industry')
-        description = request.form.get('description')
+        form = request.form
         
-        # Validation of the form data
-        if not all([company_name, email, password, confirm_password, hr_contact]):
+        required_fields = ['company_name', 'email', 'password', 'confirm_password', 'hr_contact']
+        if not all([form.get(f) for f in required_fields]):
             flash('Please fill all required fields.', 'danger')
             return render_template('company_register.html')
-        
-        # Password confirmation check
-        if password != confirm_password:
+            
+        password = form.get('password')
+        if password != form.get('confirm_password'):
             flash('Passwords do not match.', 'danger')
             return render_template('company_register.html')
         
-        # Checking if company already exists
-        if Company.query.filter_by(email=email).first():
+        if Company.query.filter_by(email=form.get('email')).first():
             flash('Email already registered.', 'danger')
             return render_template('company_register.html')
         
-        # Creating new company 
         new_company = Company(
-            company_name=company_name,
-            email=email,
+            company_name=form.get('company_name'),
+            email=form.get('email'),
             password_hash=generate_password_hash(password),
-            hr_contact=hr_contact,
-            website=website,
-            industry=industry,
-            description=description,
+            hr_contact=form.get('hr_contact'),
+            website=form.get('website'),
+            industry=form.get('industry'),
+            description=form.get('description'),
             approval_status='Pending'
         )
         
-        # Adding the new company to the database and commiting the changes
         db.session.add(new_company)
         db.session.commit()
         
@@ -223,30 +191,21 @@ def company_register():
     
     return render_template('company_register.html')
 
-# Admin Dashboard
 @app.route('/admin/dashboard')
 @login_required
 @role_required('admin')
 def admin_dashboard():
-    total_students = Student.query.count()
-    total_companies = Company.query.count()
-    total_job_positions = JobPosition.query.count()
-    total_applications = Application.query.count()
-
-    pending_companies = Company.query.filter_by(approval_status='Pending').count()
-    pending_jobs = JobPosition.query.filter_by(status='Pending').count()
-
     return render_template(
         'admin/dashboard.html',
-        total_students=total_students,
-        total_companies=total_companies,
-        total_job_positions=total_job_positions,
-        total_applications=total_applications,
-        pending_companies=pending_companies,
-        pending_jobs=pending_jobs
+        total_students=Student.query.count(),
+        total_companies=Company.query.count(),
+        total_job_positions=JobPosition.query.count(),
+        total_applications=Application.query.count(),
+        pending_companies=Company.query.filter_by(approval_status='Pending').count(),
+        pending_jobs=JobPosition.query.filter_by(status='Pending').count()
     )
 
-# Redirecting to company page of admin dashboard
+
 @app.route('/admin/companies')
 @login_required
 @role_required('admin')
@@ -265,7 +224,6 @@ def admin_companies():
 
     return render_template('admin/companies.html', companies=companies, search_query=search_query)
 
-# Company approval on admin dashboard
 @app.route('/admin/company/approve/<int:company_id>')
 @login_required
 @role_required('admin')
@@ -276,7 +234,6 @@ def admin_approve_company(company_id):
     flash(f'Company "{company.company_name}" has been approved!', 'success')
     return redirect(url_for('admin_companies'))
 
-# Company rejection on admin dashboard
 @app.route('/admin/company/reject/<int:company_id>')
 @login_required
 @role_required('admin')
@@ -287,7 +244,6 @@ def admin_reject_company(company_id):
     flash(f'Company "{company.company_name}" has been rejected.', 'warning')
     return redirect(url_for('admin_companies'))
 
-# Company blacklisting on admin dashboard
 @app.route('/admin/company/blacklist/<int:company_id>')
 @login_required
 @role_required('admin')
@@ -300,7 +256,6 @@ def admin_blacklist_company(company_id):
     flash(f'Company "{company.company_name}" has been {status}.', 'info')
     return redirect(url_for('admin_companies'))
 
-# Deleting a company on the admin dashboard
 @app.route('/admin/company/delete/<int:company_id>')
 @login_required
 @role_required('admin')
@@ -312,7 +267,7 @@ def admin_delete_company(company_id):
     flash(f'Company "{company_name}" has been deleted.', 'danger')
     return redirect(url_for('admin_companies'))
 
-# Managing students on the admin dashboard
+
 @app.route('/admin/students')
 @login_required
 @role_required('admin')
@@ -333,7 +288,6 @@ def admin_students():
 
     return render_template('admin/students.html', students=students, search_query=search_query)
 
-# Blacklisting a student using the admin dashboard
 @app.route('/admin/student/blacklist/<string:student_id>')
 @login_required
 @role_required('admin')
@@ -346,7 +300,6 @@ def admin_blacklist_student(student_id):
     flash(f'Student "{student.name}" has been {status}.', 'info')
     return redirect(url_for('admin_students'))
 
-# Deleting a student using the admin dashboard
 @app.route('/admin/student/delete/<string:student_id>')
 @login_required
 @role_required('admin')
@@ -358,15 +311,12 @@ def admin_delete_student(student_id):
     flash(f'Student "{student_name}" has been deleted.', 'danger')
     return redirect(url_for('admin_students'))
 
-# Managing jobs on the admin dashboard
 @app.route('/admin/jobs')
 @login_required
 @role_required('admin')
 def admin_jobs():
-    jobs = JobPosition.query.all()
-    return render_template('admin/jobs.html', jobs=jobs)
+    return render_template('admin/jobs.html', jobs=JobPosition.query.all())
 
-# Job approval on the admin dashboard
 @app.route('/admin/job/approve/<int:job_id>')
 @login_required
 @role_required('admin')
@@ -377,7 +327,6 @@ def admin_approve_job(job_id):
     flash(f'Job "{job.job_title}" has been approved!', 'success')
     return redirect(url_for('admin_jobs'))
 
-# Job rejection on the admin dashboard
 @app.route('/admin/job/reject/<int:job_id>')
 @login_required
 @role_required('admin')
@@ -388,7 +337,6 @@ def admin_reject_job(job_id):
     flash(f'Job "{job.job_title}" has been rejected.', 'warning')
     return redirect(url_for('admin_jobs'))
 
-# Job deletion on the admin dashboard
 @app.route('/admin/job/delete/<int:job_id>')
 @login_required
 @role_required('admin')
@@ -400,25 +348,20 @@ def admin_delete_job(job_id):
     flash(f'Job "{job_title}" has been deleted.', 'danger')
     return redirect(url_for('admin_jobs'))
 
-# Managing applications on the admin dashboard
 @app.route('/admin/applications')
 @login_required
 @role_required('admin')
 def admin_applications():
-    applications = Application.query.order_by(Application.application_date.desc()).all()
-    return render_template('admin/applications.html', applications=applications)
+    return render_template('admin/applications.html', applications=Application.query.order_by(Application.application_date.desc()).all())
 
-# Company Dashboard
 @app.route('/company/dashboard')
 @login_required
 @role_required('company')
 def company_dashboard():
-    # Check approval status
     if session.get('approval_status') != 'Approved':
         return redirect(url_for('company_pending'))
     return render_template('company/dashboard.html')
 
-# Company Pending Approval Page
 @app.route('/company/pending')
 @login_required
 @role_required('company')
@@ -426,7 +369,6 @@ def company_pending():
     company = Company.query.get(session['user_id'])
     return render_template('company/pending_approval.html', company=company)
 
-# Student Dashboard
 @app.route('/student/dashboard')
 @login_required
 @role_required('student')
