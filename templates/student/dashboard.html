@@ -3,15 +3,14 @@
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
         <h2>Student Dashboard</h2>
-        <p class="text-muted">Welcome, {{ session.username }}!</p>
+        <p class="text-muted">Welcome back, {{ session.username }}.</p>
         <hr>
-        
-        <div class="alert alert-success">
-            <h4>Authentication & RBAC Implemented Successfully!</h4>
-            <p>This dashboard is only accessible to registered students.</p>
+
+        <div class="alert alert-info mb-0">
+            New openings, application status, and placement updates will appear here.
         </div>
     </div>
 </div>

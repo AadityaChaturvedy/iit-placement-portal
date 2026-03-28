@@ -1,20 +1,30 @@
+import logging
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from models import db, Admin, Company, Student, JobPosition, Application, Placement
 from config import Config
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from sqlalchemy import or_
+from datetime import datetime
 
+# Setup basic logging to help with debugging later
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Initialize our main Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Bind the SQLAlchemy obj to the app
 db.init_app(app)
+
+# ==== DECORATORS ====
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Please login to access this page.', 'warning')
+            flash('Please sign in to continue.', 'warning')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -24,7 +34,7 @@ def role_required(role):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if session.get('user_role') != role:
-                flash('You do not have permission to access this page.', 'danger')
+                flash('This page is not available for your account role.', 'danger')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
@@ -43,7 +53,7 @@ def login():
         role = request.form.get('role')
         
         if not email or not password or not role:
-            flash('Please fill all fields.', 'danger')
+            flash('Please enter email, password, and role.', 'danger')
             return render_template('login.html')
         
         if role == 'admin':
@@ -52,15 +62,15 @@ def login():
                 session['user_id'] = user.id
                 session['user_role'] = 'admin'
                 session['username'] = user.username
-                flash(f'Welcome Admin {user.username}!', 'success')
+                flash(f'Welcome back, {user.username}.', 'success')
                 return redirect(url_for('admin_dashboard'))
-            flash('Invalid admin credentials.', 'danger')
+            flash('Admin login failed. Please check your credentials.', 'danger')
 
         elif role == 'company':
             user = Company.query.filter_by(email=email).first()
             if user and check_password_hash(user.password_hash, password):
                 if user.is_blacklisted:
-                    flash('Your account has been blacklisted. Contact admin.', 'danger')
+                    flash('This account is currently blocked. Please contact the placement office.', 'danger')
                     return render_template('login.html')
                 
                 session.update({
@@ -69,19 +79,19 @@ def login():
                     'username': user.company_name,
                     'approval_status': user.approval_status
                 })
-                flash(f'Welcome {user.company_name}!', 'success')
+                flash(f'Welcome back, {user.company_name}.', 'success')
                 
                 if user.approval_status == 'Approved':
                     return redirect(url_for('company_dashboard'))
                 return redirect(url_for('company_pending'))
                 
-            flash('Invalid company credentials.', 'danger')
+            flash('Company login failed. Please check your credentials.', 'danger')
         
         elif role == 'student':
             user = Student.query.filter_by(email=email).first()
             if user and check_password_hash(user.password_hash, password):
                 if user.is_blacklisted:
-                    flash('Your account has been blacklisted. Contact admin.', 'danger')
+                    flash('This account is currently blocked. Please contact the placement office.', 'danger')
                     return render_template('login.html')
                 
                 session.update({
@@ -89,10 +99,10 @@ def login():
                     'user_role': 'student',
                     'username': user.name
                 })
-                flash(f'Welcome {user.name}!', 'success')
+                flash(f'Welcome back, {user.name}.', 'success')
                 return redirect(url_for('student_dashboard'))
                 
-            flash('Invalid student credentials.', 'danger')
+            flash('Student login failed. Please check your credentials.', 'danger')
     
     return render_template('login.html')
 
@@ -100,7 +110,7 @@ def login():
 @login_required
 def logout():
     session.clear()
-    flash('You have been logged out successfully.', 'info')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
 
 @app.route('/student/register', methods=['GET', 'POST'])
@@ -117,15 +127,15 @@ def student_register():
         # basic validations
         required_fields = [student_id, name, email, password, confirm_password, contact]
         if not all(required_fields):
-            flash('Please fill all required fields.', 'danger')
+            flash('Please complete all mandatory fields.', 'danger')
             return render_template('student_register.html')
         
         if password != confirm_password:
-            flash('Passwords do not match.', 'danger')
+            flash('Password and confirm password do not match.', 'danger')
             return render_template('student_register.html')
         
         if Student.query.filter((Student.email == email) | (Student.student_id == student_id)).first():
-            flash('Student ID or Email already registered.', 'danger')
+            flash('Student ID or email is already registered.', 'danger')
             return render_template('student_register.html')
         
         # save student
@@ -145,11 +155,18 @@ def student_register():
             skills=form.get('skills')
         )
         
-        db.session.add(new_student)
-        db.session.commit()
-        
-        flash('Registration successful! Please login.', 'success')
-        return redirect(url_for('login'))
+        try:
+            db.session.add(new_student)
+            db.session.commit()
+            logger.info(f"Student registered successfully: {student_id}")
+            flash('Student registration completed. Please sign in.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            # Catching integrity errors or anything else that might blow up the DB
+            logger.error(f"Error registering student {student_id}: {e}")
+            db.session.rollback()
+            flash('Error registering account. Please try again.', 'danger')
+            return render_template('student_register.html')
     
     return render_template('student_register.html')
 
@@ -160,34 +177,42 @@ def company_register():
         
         required_fields = ['company_name', 'email', 'password', 'confirm_password', 'hr_contact']
         if not all([form.get(f) for f in required_fields]):
-            flash('Please fill all required fields.', 'danger')
+            flash('Please complete all mandatory fields.', 'danger')
             return render_template('company_register.html')
             
         password = form.get('password')
         if password != form.get('confirm_password'):
-            flash('Passwords do not match.', 'danger')
+            flash('Password and confirm password do not match.', 'danger')
             return render_template('company_register.html')
         
         if Company.query.filter_by(email=form.get('email')).first():
-            flash('Email already registered.', 'danger')
+            flash('This email is already registered.', 'danger')
             return render_template('company_register.html')
         
         new_company = Company(
             company_name=form.get('company_name'),
             email=form.get('email'),
             password_hash=generate_password_hash(password),
+            # Important HR details
             hr_contact=form.get('hr_contact'),
             website=form.get('website'),
             industry=form.get('industry'),
             description=form.get('description'),
+            # Default to Pending, admin must approve
             approval_status='Pending'
         )
         
-        db.session.add(new_company)
-        db.session.commit()
-        
-        flash('Registration successful! Please wait for admin approval.', 'success')
-        return redirect(url_for('login'))
+        try:
+            db.session.add(new_company)
+            db.session.commit()
+            logger.info(f"New company registered: {form.get('company_name')}")
+            flash('Company registration submitted. Wait for approval before dashboard access.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            logger.error(f"Error registering company {form.get('company_name')}: {e}")
+            db.session.rollback()
+            flash('Failed to register company due to an internal error.', 'danger')
+            return render_template('company_register.html')
     
     return render_template('company_register.html')
 
@@ -231,7 +256,7 @@ def admin_approve_company(company_id):
     company = Company.query.get_or_404(company_id)
     company.approval_status = 'Approved'
     db.session.commit()
-    flash(f'Company "{company.company_name}" has been approved!', 'success')
+    flash(f'Company "{company.company_name}" is now approved.', 'success')
     return redirect(url_for('admin_companies'))
 
 @app.route('/admin/company/reject/<int:company_id>')
@@ -241,7 +266,7 @@ def admin_reject_company(company_id):
     company = Company.query.get_or_404(company_id)
     company.approval_status = 'Rejected'
     db.session.commit()
-    flash(f'Company "{company.company_name}" has been rejected.', 'warning')
+    flash(f'Company "{company.company_name}" was rejected.', 'warning')
     return redirect(url_for('admin_companies'))
 
 @app.route('/admin/company/blacklist/<int:company_id>')
@@ -253,7 +278,7 @@ def admin_blacklist_company(company_id):
     db.session.commit()
 
     status = 'blacklisted' if company.is_blacklisted else 'activated'
-    flash(f'Company "{company.company_name}" has been {status}.', 'info')
+    flash(f'Company "{company.company_name}" was {status}.', 'info')
     return redirect(url_for('admin_companies'))
 
 @app.route('/admin/company/delete/<int:company_id>')
@@ -264,7 +289,7 @@ def admin_delete_company(company_id):
     company_name = company.company_name
     db.session.delete(company)
     db.session.commit()
-    flash(f'Company "{company_name}" has been deleted.', 'danger')
+    flash(f'Company "{company_name}" was deleted.', 'danger')
     return redirect(url_for('admin_companies'))
 
 
@@ -354,13 +379,230 @@ def admin_delete_job(job_id):
 def admin_applications():
     return render_template('admin/applications.html', applications=Application.query.order_by(Application.application_date.desc()).all())
 
+
 @app.route('/company/dashboard')
 @login_required
 @role_required('company')
 def company_dashboard():
     if session.get('approval_status') != 'Approved':
         return redirect(url_for('company_pending'))
-    return render_template('company/dashboard.html')
+
+    company = Company.query.get(session['user_id'])
+
+    total_jobs = JobPosition.query.filter_by(company_id=company.id).count()
+    active_jobs = JobPosition.query.filter_by(company_id=company.id, status='Approved').count()
+    total_applications = Application.query.join(JobPosition).filter(JobPosition.company_id == company.id).count()
+
+    recent_jobs = JobPosition.query.filter_by(company_id=company.id).order_by(JobPosition.id.desc()).limit(5).all()
+
+    return render_template(
+        'company/dashboard.html',
+        company=company,
+        total_jobs=total_jobs,
+        active_jobs=active_jobs,
+        total_applications=total_applications,
+        recent_jobs=recent_jobs
+    )
+
+
+@app.route('/company/jobs')
+@login_required
+@role_required('company')
+def company_jobs():
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    company = Company.query.get(session['user_id'])
+    jobs = JobPosition.query.filter_by(company_id=company.id).order_by(JobPosition.id.desc()).all()
+
+    return render_template('company/jobs.html', jobs=jobs)
+
+
+@app.route('/company/job/create', methods=['GET', 'POST'])
+@login_required
+@role_required('company')
+def company_create_job():
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    if request.method == 'POST':
+        job_title = request.form.get('job_title')
+        job_description = request.form.get('job_description')
+        eligibility_criteria = request.form.get('eligibility_criteria')
+        required_skills = request.form.get('required_skills')
+        experience_required = request.form.get('experience_required')
+        salary_range = request.form.get('salary_range')
+        application_deadline = request.form.get('application_deadline')
+
+        if not all([job_title, job_description, application_deadline]):
+            flash('Please complete the required fields.', 'danger')
+            return render_template('company/create_job.html')
+
+        new_job = JobPosition(
+            company_id=session['user_id'],
+            job_title=job_title,
+            job_description=job_description,
+            eligibility_criteria=eligibility_criteria,
+            required_skills=required_skills,
+            experience_required=experience_required,
+            salary_range=salary_range,
+            application_deadline=datetime.strptime(application_deadline, '%Y-%m-%d').date(),
+            status='Pending'
+        )
+
+        db.session.add(new_job)
+        db.session.commit()
+
+        flash('Job posted. It is now waiting for admin approval.', 'success')
+        return redirect(url_for('company_jobs'))
+
+    return render_template('company/create_job.html')
+
+
+@app.route('/company/job/edit/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('company')
+def company_edit_job(job_id):
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    job = JobPosition.query.get_or_404(job_id)
+
+    if job.company_id != session['user_id']:
+        flash('You can edit only your own job posts.', 'danger')
+        return redirect(url_for('company_jobs'))
+
+    if request.method == 'POST':
+        job.job_title = request.form.get('job_title')
+        job.job_description = request.form.get('job_description')
+        job.eligibility_criteria = request.form.get('eligibility_criteria')
+        job.required_skills = request.form.get('required_skills')
+        job.experience_required = request.form.get('experience_required')
+        job.salary_range = request.form.get('salary_range')
+
+        deadline = request.form.get('application_deadline')
+        if deadline:
+            job.application_deadline = datetime.strptime(deadline, '%Y-%m-%d').date()
+
+        db.session.commit()
+        flash('Job details updated.', 'success')
+        return redirect(url_for('company_jobs'))
+
+    return render_template('company/edit_job.html', job=job)
+
+
+@app.route('/company/job/close/<int:job_id>')
+@login_required
+@role_required('company')
+def company_close_job(job_id):
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    job = JobPosition.query.get_or_404(job_id)
+
+    if job.company_id != session['user_id']:
+        flash('You can close only your own job posts.', 'danger')
+        return redirect(url_for('company_jobs'))
+
+    job.status = 'Closed'
+    db.session.commit()
+    flash(f'Job "{job.job_title}" has been closed.', 'info')
+    return redirect(url_for('company_jobs'))
+
+
+@app.route('/company/job/delete/<int:job_id>')
+@login_required
+@role_required('company')
+def company_delete_job(job_id):
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    job = JobPosition.query.get_or_404(job_id)
+
+    if job.company_id != session['user_id']:
+        flash('You can delete only your own job posts.', 'danger')
+        return redirect(url_for('company_jobs'))
+
+    job_title = job.job_title
+    db.session.delete(job)
+    db.session.commit()
+    flash(f'Job "{job_title}" has been deleted.', 'danger')
+    return redirect(url_for('company_jobs'))
+
+
+@app.route('/company/applications')
+@login_required
+@role_required('company')
+def company_applications():
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    company = Company.query.get(session['user_id'])
+
+    applications = Application.query.join(JobPosition).filter(
+        JobPosition.company_id == company.id
+    ).order_by(Application.application_date.desc()).all()
+
+    return render_template('company/applications.html', applications=applications)
+
+
+@app.route('/company/application/<int:app_id>')
+@login_required
+@role_required('company')
+def company_view_application(app_id):
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    application = Application.query.get_or_404(app_id)
+
+    if application.job_position.company_id != session['user_id']:
+        flash('You can view applications only for your company jobs.', 'danger')
+        return redirect(url_for('company_applications'))
+
+    return render_template('company/view_application.html', application=application)
+
+
+@app.route('/company/application/update/<int:app_id>/<status>')
+@login_required
+@role_required('company')
+def company_update_application(app_id, status):
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    application = Application.query.get_or_404(app_id)
+
+    if application.job_position.company_id != session['user_id']:
+        flash('You can update applications only for your company jobs.', 'danger')
+        return redirect(url_for('company_applications'))
+
+    valid_statuses = ['Applied', 'Shortlisted', 'Interview', 'Selected', 'Rejected']
+
+    if status not in valid_statuses:
+        flash('Invalid status.', 'danger')
+        return redirect(url_for('company_applications'))
+
+    application.status = status
+    db.session.commit()
+
+    flash(f'Application status updated to "{status}".', 'success')
+    return redirect(url_for('company_view_application', app_id=app_id))
+
+
+@app.route('/company/shortlisted')
+@login_required
+@role_required('company')
+def company_shortlisted():
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    company = Company.query.get(session['user_id'])
+
+    applications = Application.query.join(JobPosition).filter(
+        JobPosition.company_id == company.id,
+        Application.status.in_(['Shortlisted', 'Interview', 'Selected'])
+    ).order_by(Application.updated_at.desc()).all()
+
+    return render_template('company/shortlisted.html', applications=applications)
 
 @app.route('/company/pending')
 @login_required

@@ -6,7 +6,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <h2>Admin Dashboard</h2>
-        <p class="text-muted">Welcome, {{ session.username }}!</p>
+        <p class="text-muted">Hello {{ session.username }}, here is the live placement snapshot.</p>
         <hr>
     </div>
 </div>
@@ -33,7 +33,7 @@
     <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body">
-                <h5 class="card-title">Job Postings</h5>
+                <h5 class="card-title">Job Listings</h5>
                 <h2>{{ total_job_positions }}</h2>
             </div>
         </div>
@@ -57,7 +57,7 @@
             </div>
             <div class="card-body">
                 <h3>{{ pending_companies }}</h3>
-                <a href="{{ url_for('admin_companies') }}" class="btn btn-warning">Review Companies</a>
+                <a href="{{ url_for('admin_companies') }}" class="btn btn-warning">Process Requests</a>
             </div>
         </div>
     </div>
@@ -69,7 +69,7 @@
             </div>
             <div class="card-body">
                 <h3>{{ pending_jobs }}</h3>
-                <a href="{{ url_for('admin_jobs') }}" class="btn btn-info">Review Jobs</a>
+                <a href="{{ url_for('admin_jobs') }}" class="btn btn-info">Review Listings</a>
             </div>
         </div>
     </div>
@@ -79,7 +79,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Quick Actions</h5>
+                <h5 class="mb-0">Admin Actions</h5>
             </div>
             <div class="card-body">
                 <a href="{{ url_for('admin_companies') }}" class="btn btn-outline-primary me-2">Manage Companies</a>

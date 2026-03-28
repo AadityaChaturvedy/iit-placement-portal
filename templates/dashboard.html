@@ -3,15 +3,14 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
         <h2>Admin Dashboard</h2>
-        <p class="text-muted">Welcome, {{ session.username }}!</p>
+        <p class="text-muted">Hello {{ session.username }}, here is today’s admin summary.</p>
         <hr>
-        
-        <div class="alert alert-success">
-            <h4>Authentication & RBAC Implemented Successfully!</h4>
-            <p>This dashboard is only accessible to admin users.</p>
+
+        <div class="alert alert-primary mb-0">
+            Use this space to monitor approvals, jobs, and platform activity in one place.
         </div>
     </div>
 </div>

@@ -3,15 +3,133 @@
 {% block title %}Company Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
         <h2>Company Dashboard</h2>
-        <p class="text-muted">Welcome, {{ session.username }}!</p>
+        <p class="text-muted">Welcome back, {{ company.company_name }}. Here is your hiring pipeline summary.</p>
         <hr>
-        
-        <div class="alert alert-success">
-            <h4>Authentication & RBAC Implemented Successfully!</h4>
-            <p>This dashboard is only accessible to approved companies.</p>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Listings</h5>
+                <h2>{{ total_jobs }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Live Listings</h5>
+                <h2>{{ active_jobs }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Applications Received</h5>
+                <h2>{{ total_applications }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Company Details</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Company Name:</strong> {{ company.company_name }}</p>
+                <p><strong>Email:</strong> {{ company.email }}</p>
+                <p><strong>HR Contact:</strong> {{ company.hr_contact }}</p>
+                <p>
+                    <strong>Website:</strong>
+                    {% if company.website %}
+                        <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </p>
+                <p><strong>Industry:</strong> {{ company.industry or 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Next Steps</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('company_create_job') }}" class="btn btn-primary btn-lg w-100 mb-2">
+                    Publish New Listing
+                </a>
+                <a href="{{ url_for('company_jobs') }}" class="btn btn-outline-primary w-100 mb-2">
+                    Manage Listings
+                </a>
+                <a href="{{ url_for('company_applications') }}" class="btn btn-outline-info w-100 mb-2">
+                    Review Applications
+                </a>
+                <a href="{{ url_for('company_shortlisted') }}" class="btn btn-outline-success w-100">
+                    Track Shortlisted Candidates
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Listings</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_jobs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Status</th>
+                                <th>Deadline</th>
+                                <th>Applications</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td>{{ job.job_title }}</td>
+                                <td>
+                                    {% if job.status == 'Approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif job.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif job.status == 'Closed' %}
+                                        <span class="badge bg-secondary">Closed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">In Review</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ job.application_deadline }}</td>
+                                <td>{{ job.applications|length }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('company_jobs') }}" class="btn btn-sm btn-outline-primary">See All Listings</a>
+                {% else %}
+                <div class="alert alert-info">
+                    No listings published yet. <a href="{{ url_for('company_create_job') }}">Create your first listing</a>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

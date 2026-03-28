@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Application Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Application Details</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('company_applications') }}">Applications</a></li>
+                <li class="breadcrumb-item active">Application #{{ application.id }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Student Profile</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ application.student.name }}</p>
+                <p><strong>Student ID:</strong> {{ application.student.student_id }}</p>
+                <p><strong>Email:</strong> {{ application.student.email }}</p>
+                <p><strong>Contact:</strong> {{ application.student.contact }}</p>
+                <p><strong>Degree:</strong> {{ application.student.degree or 'N/A' }}</p>
+                <p><strong>Branch:</strong> {{ application.student.branch or 'N/A' }}</p>
+                <p><strong>CGPA:</strong> {{ application.student.cgpa or 'N/A' }}</p>
+                <p><strong>Graduation Year:</strong> {{ application.student.graduation_year or 'N/A' }}</p>
+                <p><strong>Skills:</strong> {{ application.student.skills or 'N/A' }}</p>
+
+                {% if application.student.resume_path %}
+                <p>
+                    <strong>Resume:</strong>
+                    <a href="{{ url_for('static', filename='uploads/' + application.student.resume_path) }}"
+                       target="_blank" class="btn btn-sm btn-outline-primary">View Resume</a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Application Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Application ID:</strong> {{ application.id }}</p>
+                <p><strong>Job Title:</strong> {{ application.job_position.job_title }}</p>
+                <p><strong>Applied On:</strong> {{ application.application_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p>
+                    <strong>Current Status:</strong>
+                    {% if application.status == 'Selected' %}
+                        <span class="badge bg-success">Selected</span>
+                    {% elif application.status == 'Rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% elif application.status == 'Shortlisted' %}
+                        <span class="badge bg-info">Shortlisted</span>
+                    {% elif application.status == 'Interview' %}
+                        <span class="badge bg-warning text-dark">Interview</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Applied</span>
+                    {% endif %}
+                </p>
+
+                {% if application.cover_letter %}
+                <p><strong>Cover Letter:</strong></p>
+                <div class="border p-3 bg-light">
+                    {{ application.cover_letter }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Update Application Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('company_update_application', app_id=application.id, status='Shortlisted') }}"
+                       class="btn btn-info"
+                       onclick="return confirm('Mark as Shortlisted?')">Shortlist</a>
+
+                    <a href="{{ url_for('company_update_application', app_id=application.id, status='Interview') }}"
+                       class="btn btn-warning"
+                              onclick="return confirm('Move this candidate to Interview?')">Move to Interview</a>
+
+                    <a href="{{ url_for('company_update_application', app_id=application.id, status='Selected') }}"
+                       class="btn btn-success"
+                              onclick="return confirm('Mark this candidate as Selected?')">Mark Selected</a>
+
+                    <a href="{{ url_for('company_update_application', app_id=application.id, status='Rejected') }}"
+                       class="btn btn-danger"
+                       onclick="return confirm('Reject this application?')">Reject</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <a href="{{ url_for('company_applications') }}" class="btn btn-secondary">Back to Applications</a>
+    </div>
+</div>
+{% endblock %}
