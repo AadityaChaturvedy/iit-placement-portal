@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Company Analytics{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Application Analytics</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Analytics</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if job_stats %}
+        {% for stat in job_stats %}
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ stat.job.job_title }}</h5>
+                <small>Deadline: {{ stat.job.application_deadline }} | Status: {{ stat.job.status }}</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <h4>{{ stat.total }}</h4>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <h4 class="text-secondary">{{ stat.applied }}</h4>
+                            <small class="text-muted">Applied</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <h4 class="text-info">{{ stat.shortlisted }}</h4>
+                            <small class="text-muted">Shortlisted</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <h4 class="text-warning">{{ stat.interview }}</h4>
+                            <small class="text-muted">Interview</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ stat.selected }}</h4>
+                            <small class="text-muted">Selected</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <h4 class="text-danger">{{ stat.rejected }}</h4>
+                            <small class="text-muted">Rejected</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% if stat.total > 0 %}
+                <hr>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Status</th>
+                                <th class="text-end">Count</th>
+                                <th class="text-end">Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Applied</td>
+                                <td class="text-end">{{ stat.applied }}</td>
+                                <td class="text-end">{{ (stat.applied / stat.total * 100)|round(1) }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Shortlisted</td>
+                                <td class="text-end">{{ stat.shortlisted }}</td>
+                                <td class="text-end">{{ (stat.shortlisted / stat.total * 100)|round(1) }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Interview</td>
+                                <td class="text-end">{{ stat.interview }}</td>
+                                <td class="text-end">{{ (stat.interview / stat.total * 100)|round(1) }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Selected</td>
+                                <td class="text-end">{{ stat.selected }}</td>
+                                <td class="text-end">{{ (stat.selected / stat.total * 100)|round(1) }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Rejected</td>
+                                <td class="text-end">{{ stat.rejected }}</td>
+                                <td class="text-end">{{ (stat.rejected / stat.total * 100)|round(1) }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="alert alert-info">
+            No listings yet. <a href="{{ url_for('company_create_job') }}">Publish your first listing</a>.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

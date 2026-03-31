@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Reports{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Placement Reports</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Reports</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Students</h5>
+                <h2>{{ total_students }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Total Companies</h5>
+                <h2>{{ total_companies }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Total Jobs</h5>
+                <h2>{{ total_jobs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <h5>Total Applications</h5>
+                <h2>{{ total_applications }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Job Listing Status</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <td><strong>Approved</strong></td>
+                        <td class="text-end"><span class="badge bg-success">{{ approved_jobs }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pending</strong></td>
+                        <td class="text-end"><span class="badge bg-warning text-dark">{{ pending_jobs }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rejected</strong></td>
+                        <td class="text-end"><span class="badge bg-danger">{{ rejected_jobs }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Closed</strong></td>
+                        <td class="text-end"><span class="badge bg-secondary">{{ closed_jobs }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Application Status</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <td><strong>Applied</strong></td>
+                        <td class="text-end"><span class="badge bg-secondary">{{ applied_apps }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shortlisted</strong></td>
+                        <td class="text-end"><span class="badge bg-info">{{ shortlisted_apps }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Interview</strong></td>
+                        <td class="text-end"><span class="badge bg-warning text-dark">{{ interview_apps }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Selected</strong></td>
+                        <td class="text-end"><span class="badge bg-success">{{ selected_apps }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rejected</strong></td>
+                        <td class="text-end"><span class="badge bg-danger">{{ rejected_apps }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Company Approval Status</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <td><strong>Approved</strong></td>
+                        <td class="text-end"><span class="badge bg-success">{{ approved_companies }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pending</strong></td>
+                        <td class="text-end"><span class="badge bg-warning text-dark">{{ pending_companies }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rejected</strong></td>
+                        <td class="text-end"><span class="badge bg-danger">{{ rejected_companies }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Placement Success Rate</h5>
+            </div>
+            <div class="card-body">
+                {% if total_applications > 0 %}
+                <h3>{{ "%.2f"|format((selected_apps / total_applications) * 100) }}%</h3>
+                <p>{{ selected_apps }} selected out of {{ total_applications }} total applications</p>
+                {% else %}
+                <p class="text-muted">No applications have been recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Top Companies by Applications</h5>
+            </div>
+            <div class="card-body">
+                {% if top_companies %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th class="text-end">Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company, count in top_companies %}
+                        <tr>
+                            <td>{{ company }}</td>
+                            <td class="text-end"><span class="badge bg-primary">{{ count }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No company-level application data yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Most Active Students</h5>
+            </div>
+            <div class="card-body">
+                {% if top_students %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Student ID</th>
+                            <th class="text-end">Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for name, student_id, count in top_students %}
+                        <tr>
+                            <td>{{ name }}</td>
+                            <td>{{ student_id }}</td>
+                            <td class="text-end"><span class="badge bg-info text-dark">{{ count }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No student activity data yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <a href="{{ url_for('admin_placement_records') }}" class="btn btn-success">Open Placement Records</a>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.job_title }} Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold">{{ job.job_title }}</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('student_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('student_jobs') }}" class="text-decoration-none">Jobs</a></li>
+                <li class="breadcrumb-item active">{{ job.job_title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Details Column -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom pb-0 pt-4">
+                <h4 class="text-primary fw-bold">{{ job.job_title }}</h4>
+                <h6 class="text-muted"><i class="bi bi-building"></i> {{ job.company.company_name }}</h6>
+            </div>
+            
+            <div class="card-body mt-2">
+                <h6 class="fw-bold fs-5 mb-2"><i class="bi bi-card-text"></i> About the Role</h6>
+                <!-- Keep whitespace pre-line so recruiter paragraphs render nicely -->
+                <p class="text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ job.job_description }}</p>
+                <hr class="text-muted my-4">
+                
+                {% if job.eligibility_criteria %}
+                <h6 class="fw-bold fs-5 mb-3"><i class="bi bi-shield-check"></i> Eligibility Criteria</h6>
+                <div class="bg-light p-3 rounded mb-4">
+                    <p class="mb-0 text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ job.eligibility_criteria }}</p>
+                </div>
+                {% endif %}
+                
+                <h6 class="fw-bold fs-5 mb-3"><i class="bi bi-list-stars"></i> Job Requirements</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <tbody>
+                            {% if job.required_skills %}
+                            <tr>
+                                <th class="w-25 bg-light text-secondary">Tech Stack / Skills</th>
+                                <td>{{ job.required_skills }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if job.experience_required %}
+                            <tr>
+                                <th class="w-25 bg-light text-secondary">Experience Level</th>
+                                <td>{{ job.experience_required }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if job.salary_range %}
+                            <tr>
+                                <th class="w-25 bg-light text-secondary">Compensation</th>
+                                <td><span class="fw-bold text-success">{{ job.salary_range }}</span></td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Actions Column -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0 border-top border-primary border-4 mb-4">
+            <div class="card-body text-center py-4">
+                <h6 class="text-muted text-uppercase fw-bold ls-1 mb-2">Application Deadline</h6>
+                <h4 class="mb-4 text-danger fw-bold">{{ job.application_deadline.strftime('%B %d, %Y') }}</h4>
+                
+                <p class="text-secondary small mb-4">
+                    <i class="bi bi-people-fill"></i> {{ job.applications|length }} applicants so far
+                </p>
+                
+                {% if has_applied %}
+                <div class="alert alert-success border-0 py-3 mb-3 text-start">
+                    <i class="bi bi-check-circle-fill me-2"></i><strong>You've Applied!</strong>
+                </div>
+                
+                <div class="text-start mb-4">
+                    <p class="mb-1 text-secondary small text-uppercase fw-bold">Current Setup Status:</p>
+                    <p class="fs-5 fw-bold mb-3">
+                        {% if application.status == 'Selected' %}
+                            <span class="text-success">{{ application.status }}</span>
+                        {% elif application.status == 'Rejected' %}
+                            <span class="text-danger">{{ application.status }}</span>
+                        {% elif application.status == 'Shortlisted' %}
+                            <span class="text-info">{{ application.status }}</span>
+                        {% elif application.status == 'Interview' %}
+                            <span class="text-warning">{{ application.status }}</span>
+                        {% else %}
+                            <span class="text-secondary">{{ application.status }}</span>
+                        {% endif %}
+                    </p>
+                    
+                    <a href="{{ url_for('student_view_application', app_id=application.id) }}" class="btn btn-outline-primary d-block w-100 py-2">View Your Application</a>
+                </div>
+                
+                {% else %}
+                <a href="{{ url_for('student_apply_job', job_id=job.id) }}" class="btn btn-primary d-block w-100 py-2 mb-3 fw-bold fs-5 shadow-sm">
+                    Apply Now <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+                <p class="small text-muted mb-0">Make sure your profile and resume are fully updated before applying. Companies see your live profile data.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-light text-center border-0 p-3">
+                <a href="{{ url_for('student_jobs') }}" class="text-decoration-none text-secondary"><i class="bi bi-arrow-left"></i> Back to the Job Board</a>
+            </div>
+        </div>
+        
+        <!-- Quick Company Info Snippet -->
+        <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase text-secondary mb-3">About {{ job.company.company_name }}</h6>
+                {% if job.company.industry %}
+                <p class="mb-2"><strong>Sector:</strong> {{ job.company.industry }}</p>
+                {% endif %}
+                
+                {% if job.company.website %}
+                <p class="mb-0"><strong>Website:</strong> <a href="{{ job.company.website }}" target="_blank" class="text-decoration-none">{{ job.company.website|replace('https://', '')|replace('http://', '') }}</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

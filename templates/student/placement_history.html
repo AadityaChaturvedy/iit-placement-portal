@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Placement History{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Placement History</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Placement History</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Selected</h5>
+                <h2>{{ selected_applications|length }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <h5 class="card-title">In Progress</h5>
+                <h2>{{ pending_applications|length }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5 class="card-title">Rejected</h5>
+                <h2>{{ rejected_applications|length }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if selected_applications %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Successful Outcomes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Company</th>
+                                <th>Applied On</th>
+                                <th>Selected On</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in selected_applications %}
+                            <tr>
+                                <td>{{ app.job_position.job_title }}</td>
+                                <td>{{ app.job_position.company.company_name }}</td>
+                                <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ app.updated_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <a href="{{ url_for('student_view_application', app_id=app.id) }}"
+                                       class="btn btn-sm btn-outline-success">View Details</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Complete Application Timeline ({{ all_applications|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if all_applications %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>App ID</th>
+                                <th>Job Title</th>
+                                <th>Company</th>
+                                <th>Applied On</th>
+                                <th>Last Updated</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in all_applications %}
+                            <tr>
+                                <td>{{ app.id }}</td>
+                                <td>{{ app.job_position.job_title }}</td>
+                                <td>{{ app.job_position.company.company_name }}</td>
+                                <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ app.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if app.status == 'Selected' %}
+                                        <span class="badge bg-success">Selected</span>
+                                    {% elif app.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif app.status == 'Shortlisted' %}
+                                        <span class="badge bg-info">Shortlisted</span>
+                                    {% elif app.status == 'Interview' %}
+                                        <span class="badge bg-warning text-dark">Interview</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Applied</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('student_view_application', app_id=app.id) }}"
+                                       class="btn btn-sm btn-primary">Open</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    Your history is empty right now. <a href="{{ url_for('student_jobs') }}">Start applying to open roles</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

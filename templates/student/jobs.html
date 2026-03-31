@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Jobs{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Available Job Openings</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('student_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active">Jobs</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Search Bar Area -->
+<div class="row mb-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-2">
+                <form method="GET" action="{{ url_for('student_jobs') }}" class="d-flex m-0">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="search" 
+                               placeholder="Search for roles, companies, or specific skills..." 
+                               value="{{ search_query }}">
+                        <button class="btn btn-primary px-4 fw-bold" type="submit">Search</button>
+                        {% if search_query %}
+                        <a href="{{ url_for('student_jobs') }}" class="btn btn-outline-secondary">Clear</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Jobs List -->
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        {% if jobs %}
+            <!-- We'll show the count to the user so they know how many exist currently -->
+            <p class="text-muted small text-end">{{ jobs|length }} opening(s) found</p>
+            
+            {% for job in jobs %}
+            <div class="card mb-4 shadow-sm post-card transition-all">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-9">
+                            <h4 class="card-title text-primary fw-bold mb-1">{{ job.job_title }}</h4>
+                            <h6 class="card-subtitle mb-3 text-secondary"><i class="bi bi-building"></i> {{ job.company.company_name }}</h6>
+                            
+                            <!-- Truncate description slightly for a cleaner UI -->
+                            <p class="card-text text-muted mb-3">{{ job.job_description[:150] }}{% if job.job_description|length > 150 %}...{% endif %}</p>
+                            
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                {% if job.required_skills %}
+                                <span><i class="bi bi-tools"></i> <strong>Skills:</strong> {{ job.required_skills }}</span>
+                                {% endif %}
+                                
+                                {% if job.salary_range %}
+                                <span><i class="bi bi-cash-stack"></i> <strong>Salary:</strong> {{ job.salary_range }}</span>
+                                {% endif %}
+                                
+                                <span><i class="bi bi-calendar-event"></i> <strong>Deadline:</strong> <span class="{% if job.application_deadline < today_or_similar %}text-danger{% endif %}">{{ job.application_deadline }}</span></span>
+                            </div>
+                            
+                            {% if job.id in applied_job_ids %}
+                            <div class="mt-3">
+                                <span class="badge bg-success py-2 px-3"><i class="bi bi-check-circle"></i> Application Submitted</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 text-md-end text-start mt-3 mt-md-0">
+                            <a href="{{ url_for('student_view_job', job_id=job.id) }}" class="btn btn-outline-primary px-4">View & Apply</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+        {% else %}
+            <!-- Empty state when no jobs are matching or open -->
+            <div class="text-center py-5 bg-white rounded shadow-sm border">
+                <h3 class="text-muted"><i class="bi bi-clipboard-x display-4"></i></h3>
+                <h5 class="mt-3">No jobs found!</h5>
+                <p class="text-muted">{% if search_query %}Try refining your search terms.{% else %}There are no approved job posts right now. Check back later!{% endif %}</p>
+                {% if search_query %}
+                    <a href="{{ url_for('student_jobs') }}" class="btn btn-primary mt-2">Clear Filter</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

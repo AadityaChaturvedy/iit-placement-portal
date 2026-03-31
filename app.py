@@ -4,12 +4,19 @@ from models import db, Admin, Company, Student, JobPosition, Application, Placem
 from config import Config
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
 
 # Setup basic logging to help with debugging later
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Helper function for file upload capabilities
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # Initialize our main Flask app
 app = Flask(__name__)
@@ -138,6 +145,18 @@ def student_register():
             flash('Student ID or email is already registered.', 'danger')
             return render_template('student_register.html')
         
+        # Handle resume upload safely
+        resume_filename = None
+        if 'resume' in request.files:
+            file = request.files['resume']
+            if file and file.filename != '' and allowed_file(file.filename):
+                os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                # Secure filename with student ID prefix to prevent overwrites
+                filename = secure_filename(file.filename)
+                resume_filename = f"{student_id}_{filename}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], resume_filename)
+                file.save(filepath)
+
         # save student
         cgpa_val = float(form.get('cgpa')) if form.get('cgpa') else None
         grad_year = int(form.get('graduation_year')) if form.get('graduation_year') else None
@@ -152,14 +171,15 @@ def student_register():
             branch=form.get('branch'),
             cgpa=cgpa_val,
             graduation_year=grad_year,
-            skills=form.get('skills')
+            skills=form.get('skills'),
+            resume_path=resume_filename
         )
         
         try:
             db.session.add(new_student)
             db.session.commit()
             logger.info(f"Student registered successfully: {student_id}")
-            flash('Student registration completed. Please sign in.', 'success')
+            flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
         except Exception as e:
             # Catching integrity errors or anything else that might blow up the DB
@@ -378,6 +398,86 @@ def admin_delete_job(job_id):
 @role_required('admin')
 def admin_applications():
     return render_template('admin/applications.html', applications=Application.query.order_by(Application.application_date.desc()).all())
+
+
+@app.route('/admin/reports')
+@login_required
+@role_required('admin')
+def admin_reports():
+    total_students = Student.query.count()
+    total_companies = Company.query.count()
+    total_jobs = JobPosition.query.count()
+    total_applications = Application.query.count()
+
+    approved_jobs = JobPosition.query.filter_by(status='Approved').count()
+    pending_jobs = JobPosition.query.filter_by(status='Pending').count()
+    rejected_jobs = JobPosition.query.filter_by(status='Rejected').count()
+    closed_jobs = JobPosition.query.filter_by(status='Closed').count()
+
+    applied_apps = Application.query.filter_by(status='Applied').count()
+    shortlisted_apps = Application.query.filter_by(status='Shortlisted').count()
+    interview_apps = Application.query.filter_by(status='Interview').count()
+    selected_apps = Application.query.filter_by(status='Selected').count()
+    rejected_apps = Application.query.filter_by(status='Rejected').count()
+
+    approved_companies = Company.query.filter_by(approval_status='Approved').count()
+    pending_companies = Company.query.filter_by(approval_status='Pending').count()
+    rejected_companies = Company.query.filter_by(approval_status='Rejected').count()
+
+    top_companies = db.session.query(
+        Company.company_name,
+        func.count(Application.id).label('app_count')
+    ).join(
+        JobPosition, JobPosition.company_id == Company.id
+    ).join(
+        Application, Application.job_position_id == JobPosition.id
+    ).group_by(
+        Company.id, Company.company_name
+    ).order_by(
+        func.count(Application.id).desc()
+    ).limit(10).all()
+
+    top_students = db.session.query(
+        Student.name,
+        Student.student_id,
+        func.count(Application.id).label('app_count')
+    ).join(
+        Application, Application.student_id == Student.student_id
+    ).group_by(
+        Student.student_id, Student.name
+    ).order_by(
+        func.count(Application.id).desc()
+    ).limit(10).all()
+
+    return render_template(
+        'admin/reports.html',
+        total_students=total_students,
+        total_companies=total_companies,
+        total_jobs=total_jobs,
+        total_applications=total_applications,
+        approved_jobs=approved_jobs,
+        pending_jobs=pending_jobs,
+        rejected_jobs=rejected_jobs,
+        closed_jobs=closed_jobs,
+        applied_apps=applied_apps,
+        shortlisted_apps=shortlisted_apps,
+        interview_apps=interview_apps,
+        selected_apps=selected_apps,
+        rejected_apps=rejected_apps,
+        approved_companies=approved_companies,
+        pending_companies=pending_companies,
+        rejected_companies=rejected_companies,
+        top_companies=top_companies,
+        top_students=top_students
+    )
+
+
+@app.route('/admin/placement-records')
+@login_required
+@role_required('admin')
+def admin_placement_records():
+    placements = Application.query.filter_by(status='Selected').order_by(Application.updated_at.desc()).all()
+    return render_template('admin/placement_records.html', placements=placements)
 
 
 @app.route('/company/dashboard')
@@ -604,6 +704,33 @@ def company_shortlisted():
 
     return render_template('company/shortlisted.html', applications=applications)
 
+
+@app.route('/company/analytics')
+@login_required
+@role_required('company')
+def company_analytics():
+    if session.get('approval_status') != 'Approved':
+        return redirect(url_for('company_pending'))
+
+    company = Company.query.get(session['user_id'])
+    all_jobs = JobPosition.query.filter_by(company_id=company.id).order_by(JobPosition.id.desc()).all()
+
+    job_stats = []
+    for job in all_jobs:
+        apps = Application.query.filter_by(job_position_id=job.id)
+        stats = {
+            'job': job,
+            'total': apps.count(),
+            'applied': apps.filter_by(status='Applied').count(),
+            'shortlisted': apps.filter_by(status='Shortlisted').count(),
+            'interview': apps.filter_by(status='Interview').count(),
+            'selected': apps.filter_by(status='Selected').count(),
+            'rejected': apps.filter_by(status='Rejected').count()
+        }
+        job_stats.append(stats)
+
+    return render_template('company/analytics.html', job_stats=job_stats)
+
 @app.route('/company/pending')
 @login_required
 @role_required('company')
@@ -611,11 +738,239 @@ def company_pending():
     company = Company.query.get(session['user_id'])
     return render_template('company/pending_approval.html', company=company)
 
+# ==================== STUDENT ROUTES ====================
+
 @app.route('/student/dashboard')
 @login_required
 @role_required('student')
 def student_dashboard():
-    return render_template('student/dashboard.html')
+    student = Student.query.get(session['user_id'])
+    
+    # Dashboard metrics for a quick overview
+    total_applications = Application.query.filter_by(student_id=student.student_id).count()
+    shortlisted = Application.query.filter_by(student_id=student.student_id, status='Shortlisted').count()
+    selected = Application.query.filter_by(student_id=student.student_id, status='Selected').count()
+    
+    # fetch recent approved jobs
+    recent_jobs = JobPosition.query.filter_by(status='Approved').order_by(JobPosition.id.desc()).limit(5).all()
+    
+    # recent applications by this student
+    recent_applications = Application.query.filter_by(student_id=student.student_id).order_by(Application.application_date.desc()).limit(5).all()
+    
+    # latest notifications via status changes
+    notifications = Application.query.filter_by(student_id=student.student_id).filter(
+        Application.status.in_(['Shortlisted', 'Interview', 'Selected', 'Rejected'])
+    ).order_by(Application.updated_at.desc()).limit(5).all()
+    
+    return render_template('student/dashboard.html',
+                         student=student,
+                         total_applications=total_applications,
+                         shortlisted=shortlisted,
+                         selected=selected,
+                         recent_jobs=recent_jobs,
+                         recent_applications=recent_applications,
+                         notifications=notifications)
+
+@app.route('/student/profile', methods=['GET', 'POST'])
+@login_required
+@role_required('student')
+def student_profile():
+    # session['user_id'] is actually the student_id string
+    student = Student.query.get(session['user_id'])
+    
+    if request.method == 'POST':
+        student.name = request.form.get('name')
+        student.contact = request.form.get('contact')
+        student.degree = request.form.get('degree')
+        student.branch = request.form.get('branch')
+        
+        cgpa = request.form.get('cgpa')
+        student.cgpa = float(cgpa) if cgpa else None
+        
+        grad_year = request.form.get('graduation_year')
+        student.graduation_year = int(grad_year) if grad_year else None
+        
+        student.skills = request.form.get('skills')
+        
+        # Handling the resume upload logically
+        if 'resume' in request.files:
+            file = request.files['resume']
+            if file and file.filename != '' and allowed_file(file.filename):
+                os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                
+                filename = secure_filename(file.filename)
+                resume_filename = f"{student.student_id}_{filename}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], resume_filename)
+                
+                # Cleanup the old resume to avoid junk accumulating on server
+                if student.resume_path:
+                    old_resume = os.path.join(app.config['UPLOAD_FOLDER'], student.resume_path)
+                    if os.path.exists(old_resume):
+                        os.remove(old_resume)
+                
+                file.save(filepath)
+                student.resume_path = resume_filename
+        
+        try:
+            db.session.commit()
+            logger.info(f"Student profile updated for {student.student_id}")
+            flash('Profile updated successfully!', 'success')
+        except Exception as e:
+            logger.error(f"Error updating profile for {student.student_id}: {e}")
+            db.session.rollback()
+            flash('Could not update profile right now due to a server error.', 'danger')
+            
+        return redirect(url_for('student_profile'))
+    
+    return render_template('student/profile.html', student=student)
+
+@app.route('/student/jobs')
+@login_required
+@role_required('student')
+def student_jobs():
+    search_query = request.args.get('search', '')
+    
+    # We strictly only want to display approved jobs to students
+    query = JobPosition.query.filter_by(status='Approved')
+    
+    if search_query:
+        query = query.join(Company).filter(
+            or_(
+                JobPosition.job_title.ilike(f'%{search_query}%'),
+                Company.company_name.ilike(f'%{search_query}%'),
+                JobPosition.required_skills.ilike(f'%{search_query}%')
+            )
+        )
+    
+    jobs = query.order_by(JobPosition.id.desc()).all()
+    
+    # Fetch which jobs the student already applied to so UI shows an 'Applied' tag
+    student_applications = Application.query.filter_by(student_id=session['user_id']).all()
+    applied_job_ids = [app.job_position_id for app in student_applications]
+    
+    return render_template('student/jobs.html', 
+                         jobs=jobs, 
+                         search_query=search_query,
+                         applied_job_ids=applied_job_ids)
+
+@app.route('/student/job/<int:job_id>')
+@login_required
+@role_required('student')
+def student_view_job(job_id):
+    job = JobPosition.query.get_or_404(job_id)
+    
+    if job.status != 'Approved':
+        flash('This job is not currently available.', 'warning')
+        return redirect(url_for('student_jobs'))
+    
+    existing_application = Application.query.filter_by(
+        student_id=session['user_id'],
+        job_position_id=job_id
+    ).first()
+    
+    return render_template('student/view_job.html', 
+                         job=job, 
+                         has_applied=(existing_application is not None),
+                         application=existing_application)
+
+@app.route('/student/job/apply/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('student')
+def student_apply_job(job_id):
+    job = JobPosition.query.get_or_404(job_id)
+    
+    if job.status != 'Approved':
+        flash('This job is not available for applications.', 'warning')
+        return redirect(url_for('student_jobs'))
+    
+    # Double-check they haven't applied already to prevent DB constraint failures!
+    existing_application = Application.query.filter_by(
+        student_id=session['user_id'],
+        job_position_id=job_id
+    ).first()
+    
+    if existing_application:
+        flash('You have already applied for this job.', 'warning')
+        return redirect(url_for('student_view_job', job_id=job_id))
+    
+    if request.method == 'POST':
+        cover_letter = request.form.get('cover_letter')
+        
+        new_application = Application(
+            student_id=session['user_id'],
+            job_position_id=job_id,
+            cover_letter=cover_letter,
+            status='Applied'
+        )
+        
+        try:
+            db.session.add(new_application)
+            db.session.commit()
+            logger.info(f"Student {session['user_id']} successfully applied to Job {job_id}")
+            flash(f'Successfully applied for {job.job_title}!', 'success')
+            return redirect(url_for('student_applications'))
+        except Exception as e:
+            logger.error(f"Error applying to job {job_id} for {session['user_id']}: {e}")
+            db.session.rollback()
+            flash('There was an error processing your application.', 'danger')
+    
+    return render_template('student/apply_job.html', job=job)
+
+@app.route('/student/applications')
+@login_required
+@role_required('student')
+def student_applications():
+    applications = Application.query.filter_by(student_id=session['user_id']).order_by(Application.application_date.desc()).all()
+    return render_template('student/applications.html', applications=applications)
+
+
+@app.route('/student/placement-history')
+@login_required
+@role_required('student')
+def student_placement_history():
+    student = Student.query.get(session['user_id'])
+
+    all_applications = Application.query.filter_by(
+        student_id=student.student_id
+    ).order_by(
+        Application.application_date.desc()
+    ).all()
+
+    selected_applications = [app for app in all_applications if app.status == 'Selected']
+    rejected_applications = [app for app in all_applications if app.status == 'Rejected']
+    pending_applications = [
+        app for app in all_applications
+        if app.status in ['Applied', 'Shortlisted', 'Interview']
+    ]
+
+    return render_template(
+        'student/placement_history.html',
+        all_applications=all_applications,
+        selected_applications=selected_applications,
+        rejected_applications=rejected_applications,
+        pending_applications=pending_applications
+    )
+
+@app.route('/student/application/<int:app_id>')
+@login_required
+@role_required('student')
+def student_view_application(app_id):
+    application = Application.query.get_or_404(app_id)
+    
+    # Ensure students can only view their own applications for strict privacy
+    if application.student_id != session['user_id']:
+        logger.warning(f"Unauthorized application view attempt by {session['user_id']} on app {app_id}")
+        flash('You do not have permission to view this application.', 'danger')
+        return redirect(url_for('student_applications'))
+    
+    return render_template('student/view_application.html', application=application)
+
+@app.route('/student/notifications')
+@login_required
+@role_required('student')
+def student_notifications():
+    notifications = Application.query.filter_by(student_id=session['user_id']).order_by(Application.updated_at.desc()).all()
+    return render_template('student/notifications.html', notifications=notifications)
 
 if __name__ == '__main__':
     app.run(debug=True)
