@@ -1,0 +1,28 @@
+{% macro status_badge(status) %}
+    {% if status == 'Selected' %}
+        <span class="badge bg-success">Selected</span>
+    {% elif status == 'Rejected' %}
+        <span class="badge bg-danger">Rejected</span>
+    {% elif status == 'Shortlisted' %}
+        <span class="badge bg-info">Shortlisted</span>
+    {% elif status == 'Interview' %}
+        <span class="badge bg-warning text-dark">Interview</span>
+    {% else %}
+        <span class="badge bg-secondary">{{ status }}</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro approval_badge(status) %}
+    {% if status == 'Approved' %}
+        <span class="badge bg-success">Approved</span>
+    {% elif status == 'Rejected' %}
+        <span class="badge bg-danger">Rejected</span>
+    {% else %}
+        <span class="badge bg-warning text-dark">Pending</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro confirm_delete(url, item_name) %}
+    <a href="{{ url }}" class="btn btn-sm btn-outline-danger"
+       onclick="return confirm('Delete {{ item_name }}? This cannot be undone.')">Delete</a>
+{% endmacro %}
