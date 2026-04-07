@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Student{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">Edit Student</h2>
+
+<div class="card">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Student ID</label>
+                    <input type="text" class="form-control" value="{{ student.student_id }}" disabled>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="contact" class="form-label">Contact</label>
+                    <input type="text" class="form-control" id="contact" name="contact" value="{{ student.contact }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="degree" class="form-label">Degree</label>
+                    <input type="text" class="form-control" id="degree" name="degree" value="{{ student.degree or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="branch" class="form-label">Branch</label>
+                    <input type="text" class="form-control" id="branch" name="branch" value="{{ student.branch or '' }}">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="cgpa" class="form-label">CGPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="form-control" id="cgpa" name="cgpa" value="{{ student.cgpa or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="graduation_year" class="form-label">Graduation Year</label>
+                    <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ student.graduation_year or '' }}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="skills" class="form-label">Skills</label>
+                <textarea class="form-control" id="skills" name="skills" rows="3">{{ student.skills or '' }}</textarea>
+            </div>
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="is_blacklisted" name="is_blacklisted" {% if student.is_blacklisted %}checked{% endif %}>
+                <label class="form-check-label" for="is_blacklisted">Blocked</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Company Profile{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">Company Profile</h2>
+
+<div class="card">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="company_name" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" id="company_name" name="company_name" value="{{ company.company_name }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ company.email }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="hr_contact" class="form-label">HR Contact</label>
+                    <input type="text" class="form-control" id="hr_contact" name="hr_contact" value="{{ company.hr_contact }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="website" class="form-label">Website</label>
+                    <input type="url" class="form-control" id="website" name="website" value="{{ company.website or '' }}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="industry" class="form-label">Industry</label>
+                <input type="text" class="form-control" id="industry" name="industry" value="{{ company.industry or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="4">{{ company.description or '' }}</textarea>
+            </div>
+
+            <div class="alert alert-light border mb-4">
+                Approval Status: <strong>{{ company.approval_status }}</strong>
+                {% if company.is_blacklisted %}<span class="ms-2 badge bg-dark">Blocked</span>{% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+            <a href="{{ url_for('company_dashboard') }}" class="btn btn-outline-secondary ms-2">Dashboard</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
