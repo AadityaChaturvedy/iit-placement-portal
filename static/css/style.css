@@ -1,18 +1,300 @@
+:root {
+    --clr-primary: #2c5282;
+    --clr-primary-light: #3b82c4;
+    --clr-accent: #38a169;
+    --clr-bg: #f0f2f5;
+    --clr-card-bg: #ffffff;
+    --clr-text: #1a202c;
+    --clr-muted: #718096;
+    --sidebar-width: 250px;
+}
+
 body {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: var(--clr-bg);
+    color: var(--clr-text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.navbar {
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-light)) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    padding: .6rem 0;
+}
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: .3px;
 }
 
 .card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     border: none;
+    border-radius: .6rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    transition: box-shadow .2s ease;
+}
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    font-weight: 600;
 }
 
-.navbar-brand {
-    font-weight: bold;
-    font-size: 1.5rem;
+/* gradient backgrounds for the stat cards on dashboards */
+.card.bg-primary { background: linear-gradient(135deg, #2c5282, #2b6cb0) !important; border-radius: .75rem; }
+.card.bg-success { background: linear-gradient(135deg, #276749, #38a169) !important; border-radius: .75rem; }
+.card.bg-info    { background: linear-gradient(135deg, #2b6cb0, #4299e1) !important; border-radius: .75rem; }
+.card.bg-warning { background: linear-gradient(135deg, #c05621, #dd6b20) !important; border-radius: .75rem; }
+
+.table { margin-bottom: 0; }
+.table th {
+    font-weight: 600;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--clr-muted);
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(44, 82, 130, .04);
+}
+
+.btn {
+    border-radius: .4rem;
+    font-weight: 500;
+    transition: all .15s ease;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary {
+    background-color: var(--clr-primary);
+    border-color: var(--clr-primary);
+}
+.btn-primary:hover {
+    background-color: var(--clr-primary-light);
+    border-color: var(--clr-primary-light)
+}
+
+.badge {
+    font-weight: 500;
+    padding: .35em .65em;
+    border-radius: .35rem;
 }
 
 .alert {
-    border-radius: 0.5rem;
+    border-radius: .5rem;
+    border: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--clr-primary-light);
+    box-shadow: 0 0 0 .2rem rgba(44, 82, 130, .15);
+}
+.form-label {
+    font-weight: 500;
+    font-size: .9rem;
+    margin-bottom: .3rem;
+}
+
+.dashboard-greeting {
+    border-left: 4px solid var(--clr-primary);
+    padding-left: 1rem;
+}
+
+.site-footer {
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid #e2e8f0;
+    color: var(--clr-muted);
+    font-size: .85rem;
+}
+
+/* subtle pulse for new notification items */
+@keyframes notif-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
+}
+.notif-new {
+    animation: notif-pulse 2s ease-in-out 3;
+}
+
+/* .sidebar-link { color: var(--clr-primary); text-decoration: none; } */
+
+@media (max-width: 768px) {
+    .navbar-brand { font-size: 1.1rem; }
+    .card { margin-bottom: .75rem; }
+
+    .row .col-md-3,
+    .row .col-md-4 {
+        margin-bottom: .5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-lg {
+        font-size: .95rem;
+        padding: .5rem 1rem;
+    }
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.search-box { max-width: 350px; }
+.search-box .form-control { border-radius: .4rem 0 0 .4rem; }
+.search-box .btn { border-radius: 0 .4rem .4rem 0; }
+
+/* login hero + bento layout (scoped to login page only) */
+.login-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.1rem;
+    padding: 2rem;
+    margin: 1rem 0 2rem;
+    background: var(--clr-bg);
+    border: 1px solid rgba(44, 82, 130, .12);
+}
+
+.login-orb {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(2px);
+    pointer-events: none;
+    opacity: .7;
+    display: none;
+}
+
+.login-orb-one {
+    width: 280px;
+    height: 280px;
+    top: -120px;
+    left: -80px;
+    background: radial-gradient(circle, rgba(59, 130, 196, .28) 0%, rgba(59, 130, 196, 0) 72%);
+}
+
+.login-orb-two {
+    width: 260px;
+    height: 260px;
+    bottom: -130px;
+    right: -70px;
+    background: radial-gradient(circle, rgba(56, 161, 105, .25) 0%, rgba(56, 161, 105, 0) 72%);
+}
+
+.login-hero-header {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin-bottom: 1.4rem;
+}
+
+.login-kicker {
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    font-weight: 700;
+    color: var(--clr-primary);
+    font-size: .78rem;
+}
+
+.login-title {
+    font-size: clamp(1.8rem, 4.8vw, 3rem);
+    line-height: 1.08;
+    font-weight: 750;
+}
+
+.login-subtitle {
+    color: var(--clr-muted);
+    max-width: 58ch;
+    font-size: 1.02rem;
+}
+
+.bento-login-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: .85rem;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: minmax(105px, auto);
+}
+
+.bento-card {
+    background: rgba(255, 255, 255, .82);
+    border: 1px solid rgba(44, 82, 130, .13);
+    border-radius: 1rem;
+    padding: 1rem;
+    backdrop-filter: saturate(140%) blur(6px);
+    -webkit-backdrop-filter: saturate(140%) blur(6px);
+    box-shadow: 0 14px 24px rgba(44, 82, 130, .08);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(44, 82, 130, .13);
+}
+
+.bento-form-card { grid-column: span 6; grid-row: span 3; }
+.bento-feature-card { grid-column: span 6; grid-row: span 2; }
+.bento-mini-card { grid-column: span 3; }
+.bento-role-card { grid-column: span 6; }
+
+.bento-login-grid > .bento-form-card:only-child {
+    grid-column: 3 / span 8;
+    grid-row: auto;
+}
+
+.bento-label {
+    font-size: .75rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--clr-primary-light);
+    font-weight: 700;
+    margin-bottom: .35rem;
+}
+
+.bento-list {
+    padding-left: 1.1rem;
+    color: var(--clr-text);
+}
+
+.bento-list li { margin-bottom: .45rem; }
+
+.accent-card {
+    background: linear-gradient(150deg, rgba(56, 161, 105, .14), rgba(56, 161, 105, .05));
+    border-color: rgba(56, 161, 105, .35);
+}
+
+.role-pills {
+    display: flex;
+    gap: .55rem;
+    flex-wrap: wrap;
+}
+
+.role-pills span {
+    border-radius: 999px;
+    padding: .45rem .78rem;
+    font-size: .85rem;
+    font-weight: 600;
+    border: 1px solid rgba(44, 82, 130, .2);
+    background: rgba(44, 82, 130, .06);
+    color: var(--clr-primary);
+}
+
+@media (max-width: 992px) {
+    .bento-login-grid > .bento-form-card:only-child,
+    .bento-form-card,
+    .bento-feature-card,
+    .bento-mini-card,
+    .bento-role-card {
+        grid-column: span 12;
+        grid-row: auto;
+    }
+
+    .login-hero {
+        padding: 1.2rem;
+        border-radius: .9rem;
+    }
 }

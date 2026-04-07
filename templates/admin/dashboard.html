@@ -3,92 +3,80 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Admin Dashboard</h2>
-        <p class="text-muted">Hello {{ session.username }}, here is the live placement snapshot.</p>
-        <hr>
-    </div>
+<div class="dashboard-greeting mb-4">
+    <h2>Admin Dashboard</h2>
+    <p class="text-muted mb-0">Hey {{ session.username }}, here's the current snapshot.</p>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
+<div class="row mb-4 g-3">
+    <div class="col-6 col-md-3">
         <div class="card bg-primary text-white">
             <div class="card-body">
-                <h5 class="card-title">Total Students</h5>
-                <h2>{{ total_students }}</h2>
+                <div class="text-uppercase small opacity-75">Students</div>
+                <h2 class="mb-0">{{ total_students }}</h2>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card bg-success text-white">
             <div class="card-body">
-                <h5 class="card-title">Total Companies</h5>
-                <h2>{{ total_companies }}</h2>
+                <div class="text-uppercase small opacity-75">Companies</div>
+                <h2 class="mb-0">{{ total_companies }}</h2>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body">
-                <h5 class="card-title">Job Listings</h5>
-                <h2>{{ total_job_positions }}</h2>
+                <div class="text-uppercase small opacity-75">Jobs</div>
+                <h2 class="mb-0">{{ total_jobs }}</h2>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card bg-warning text-white">
             <div class="card-body">
-                <h5 class="card-title">Applications</h5>
-                <h2>{{ total_applications }}</h2>
+                <div class="text-uppercase small opacity-75">Applications</div>
+                <h2 class="mb-0">{{ total_applications }}</h2>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-4">
+<div class="row mb-4 g-3">
     <div class="col-md-6">
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0">Pending Company Approvals</h5>
-            </div>
-            <div class="card-body">
-                <h3>{{ pending_companies }}</h3>
-                <a href="{{ url_for('admin_companies') }}" class="btn btn-warning">Process Requests</a>
+        <div class="card h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Pending Companies</h5>
+                    <h3 class="text-warning mb-0">{{ pending_companies }}</h3>
+                </div>
+                <a href="{{ url_for('admin_companies') }}" class="btn btn-warning">Review</a>
             </div>
         </div>
     </div>
-
     <div class="col-md-6">
-        <div class="card border-info">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Pending Job Approvals</h5>
-            </div>
-            <div class="card-body">
-                <h3>{{ pending_jobs }}</h3>
-                <a href="{{ url_for('admin_jobs') }}" class="btn btn-info">Review Listings</a>
+        <div class="card h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Pending Jobs</h5>
+                    <h3 class="text-info mb-0">{{ pending_jobs }}</h3>
+                </div>
+                <a href="{{ url_for('admin_jobs') }}" class="btn btn-info text-white">Review</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Admin Actions</h5>
-            </div>
-            <div class="card-body">
-                <a href="{{ url_for('admin_companies') }}" class="btn btn-outline-primary me-2">Manage Companies</a>
-                <a href="{{ url_for('admin_students') }}" class="btn btn-outline-success me-2">Manage Students</a>
-                <a href="{{ url_for('admin_jobs') }}" class="btn btn-outline-info me-2">Manage Jobs</a>
-                <a href="{{ url_for('admin_applications') }}" class="btn btn-outline-warning me-2">View Applications</a>
-                <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-secondary">View Reports</a>
-            </div>
-        </div>
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">Quick Links</h5></div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin_companies') }}" class="btn btn-outline-primary">Companies</a>
+        <a href="{{ url_for('admin_students') }}" class="btn btn-outline-success">Students</a>
+        <a href="{{ url_for('admin_jobs') }}" class="btn btn-outline-info">Jobs</a>
+        <a href="{{ url_for('admin_applications') }}" class="btn btn-outline-warning">Applications</a>
+        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-secondary">Reports</a>
+        <a href="{{ url_for('admin_export_placements') }}" class="btn btn-outline-dark">Export CSV</a>
     </div>
 </div>
 {% endblock %}

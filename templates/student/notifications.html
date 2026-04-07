@@ -1,85 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}Notifications feed{% endblock %}
+{% block title %}Notifications{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="fw-bold">Activity <i class="bi bi-bell ms-2 text-primary"></i></h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('student_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                <li class="breadcrumb-item active">Notifications</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+<h2 class="mb-3">All Updates</h2>
 
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card shadow-sm border-0 bg-light">
-            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-                <h5 class="mb-0 fw-bold text-dark me-auto">Recent Updates</h5>
-                <span class="badge bg-secondary rounded-pill py-2 px-3 fs-6">{{ notifications|length }} alerts</span>
+{% if notifications %}
+    {% for n in notifications %}
+    <div class="card mb-2 {% if n.status in ['Selected', 'Rejected', 'Shortlisted', 'Interview'] %}border-start border-3 
+        {% if n.status == 'Selected' %}border-success
+        {% elif n.status == 'Rejected' %}border-danger
+        {% elif n.status == 'Shortlisted' %}border-info
+        {% elif n.status == 'Interview' %}border-warning{% endif %}{% endif %}">
+        <div class="card-body py-2 d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ n.job_position.job_title }}</strong> 
+                <span class="text-muted">at {{ n.job_position.company.company_name }}</span>
+                <br>
+                <small>
+                    Status: 
+                    <strong class="{% if n.status == 'Selected' %}text-success{% elif n.status == 'Rejected' %}text-danger{% elif n.status == 'Shortlisted' %}text-info{% elif n.status == 'Interview' %}text-warning{% endif %}">
+                        {{ n.status }}
+                    </strong>
+                </small>
             </div>
-            
-            <div class="card-body p-0">
-                {% if notifications %}
-                <div class="list-group list-group-flush">
-                    {% for notif in notifications %}
-                    <div class="list-group-item list-group-item-action p-4 border-bottom 
-                        {% if notif.status == 'Selected' %}bg-success bg-opacity-10
-                        {% elif notif.status == 'Rejected' %}bg-danger bg-opacity-10
-                        {% elif notif.status == 'Shortlisted' %}bg-info bg-opacity-10
-                        {% elif notif.status == 'Interview' %}bg-warning bg-opacity-10
-                        {% endif %}">
-                        
-                        <div class="d-flex w-100 justify-content-between mb-2">
-                            <h6 class="mb-1 fw-bold text-dark">{{ notif.job_position.job_title }}</h6>
-                            <small class="text-muted fw-bold">{{ notif.updated_at.strftime('%b %d at %H:%M') }}</small>
-                        </div>
-                        
-                        <p class="mb-2 text-secondary"><i class="bi bi-building"></i> {{ notif.job_position.company.company_name }}</p>
-                        
-                        <div class="d-flex align-items-center mt-3">
-                            <span class="me-auto text-muted small">Status updated to: 
-                                <strong class="
-                                {% if notif.status == 'Selected' %}text-success
-                                {% elif notif.status == 'Rejected' %}text-danger
-                                {% elif notif.status == 'Shortlisted' %}text-info
-                                {% elif notif.status == 'Interview' %}text-warning text-dark
-                                {% else %}text-secondary{% endif %}">{{ notif.status }}</strong>
-                            </span>
-                            
-                            <a href="{{ url_for('student_view_application', app_id=notif.id) }}" class="btn btn-sm btn-outline-dark fw-bold px-3 shadow-sm rounded-pill">
-                                View App <i class="bi bi-chevron-right ms-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-5 bg-white">
-                    <div class="mb-3">
-                        <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
-                    </div>
-                    <h5 class="text-secondary fw-bold">All caught up!</h5>
-                    <p class="text-muted">You have no status updates at the moment.</p>
-                </div>
-                {% endif %}
-            </div>
+            <small class="text-muted">{{ n.updated_at.strftime('%d %b %Y') }}</small>
         </div>
     </div>
-    
-    <!-- Pro-Tip Sidebar -->
-    <div class="col-lg-4 mt-4 mt-lg-0">
-        <div class="card border-0 bg-primary text-white shadow-sm mb-4">
-            <div class="card-body p-4 text-center">
-                <i class="bi bi-lightbulb display-4 text-warning mb-3"></i>
-                <h5 class="fw-bold text-white mb-2">Quick Tip</h5>
-                <p class="mb-0 text-white-50">Companies review applications on rolling bases. Always keep your profile and resume updated while waiting for updates here!</p>
-            </div>
-        </div>
-    </div>
-</div>
+    {% endfor %}
+{% else %}
+<p class="text-muted">No updates yet. Apply to some jobs to start tracking!</p>
+{% endif %}
+
+<a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary mt-3">← Dashboard</a>
 {% endblock %}

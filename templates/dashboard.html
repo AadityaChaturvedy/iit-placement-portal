@@ -1,17 +1,20 @@
 {% extends "base.html" %}
-
-{% block title %}Admin Dashboard{% endblock %}
-
+{% block title %}Dashboard{% endblock %}
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Admin Dashboard</h2>
-        <p class="text-muted">Hello {{ session.username }}, here is today’s admin summary.</p>
-        <hr>
-
-        <div class="alert alert-primary mb-0">
-            Use this space to monitor approvals, jobs, and platform activity in one place.
-        </div>
-    </div>
+<div class="text-center mt-5">
+    <h3>Welcome, {{ session.username }}</h3>
+    <p class="text-muted">Redirecting to your dashboard...</p>
 </div>
+<script>
+// this page shouldn't really be visible, just a fallback
+setTimeout(function() {
+    {% if session.user_role == 'admin' %}
+    window.location = "{{ url_for('admin_dashboard') }}";
+    {% elif session.user_role == 'company' %}
+    window.location = "{{ url_for('company_dashboard') }}";
+    {% else %}
+    window.location = "{{ url_for('student_dashboard') }}";
+    {% endif %}
+}, 500);
+</script>
 {% endblock %}

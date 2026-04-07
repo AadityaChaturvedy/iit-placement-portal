@@ -1,124 +1,120 @@
 {% extends "base.html" %}
 
-{% block title %}Company Analytics{% endblock %}
+{% block title %}Analytics{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Application Analytics</h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Analytics</li>
-            </ol>
-        </nav>
-    </div>
+<div class="mb-3">
+    <h2>Application Analytics</h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Analytics</li>
+        </ol>
+    </nav>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        {% if job_stats %}
-        {% for stat in job_stats %}
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">{{ stat.job.job_title }}</h5>
-                <small>Deadline: {{ stat.job.application_deadline }} | Status: {{ stat.job.status }}</small>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-2">
-                        <div class="text-center">
-                            <h4>{{ stat.total }}</h4>
-                            <small class="text-muted">Total</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="text-center">
-                            <h4 class="text-secondary">{{ stat.applied }}</h4>
-                            <small class="text-muted">Applied</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="text-center">
-                            <h4 class="text-info">{{ stat.shortlisted }}</h4>
-                            <small class="text-muted">Shortlisted</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="text-center">
-                            <h4 class="text-warning">{{ stat.interview }}</h4>
-                            <small class="text-muted">Interview</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="text-center">
-                            <h4 class="text-success">{{ stat.selected }}</h4>
-                            <small class="text-muted">Selected</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="text-center">
-                            <h4 class="text-danger">{{ stat.rejected }}</h4>
-                            <small class="text-muted">Rejected</small>
-                        </div>
-                    </div>
-                </div>
+{% if job_stats %}
+    {% set ns = namespace(total_all=0, app_all=0, short_all=0, int_all=0, sel_all=0, rej_all=0) %}
+    {% for stat_entry in job_stats %}
+        {% set ns.total_all = ns.total_all + stat_entry.total %}
+        {% set ns.app_all = ns.app_all + stat_entry.applied %}
+        {% set ns.short_all = ns.short_all + stat_entry.shortlisted %}
+        {% set ns.int_all = ns.int_all + stat_entry.interview %}
+        {% set ns.sel_all = ns.sel_all + stat_entry.selected %}
+        {% set ns.rej_all = ns.rej_all + stat_entry.rejected %}
+    {% endfor %}
 
-                {% if stat.total > 0 %}
-                <hr>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Status</th>
-                                <th class="text-end">Count</th>
-                                <th class="text-end">Share</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Applied</td>
-                                <td class="text-end">{{ stat.applied }}</td>
-                                <td class="text-end">{{ (stat.applied / stat.total * 100)|round(1) }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Shortlisted</td>
-                                <td class="text-end">{{ stat.shortlisted }}</td>
-                                <td class="text-end">{{ (stat.shortlisted / stat.total * 100)|round(1) }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Interview</td>
-                                <td class="text-end">{{ stat.interview }}</td>
-                                <td class="text-end">{{ (stat.interview / stat.total * 100)|round(1) }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Selected</td>
-                                <td class="text-end">{{ stat.selected }}</td>
-                                <td class="text-end">{{ (stat.selected / stat.total * 100)|round(1) }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Rejected</td>
-                                <td class="text-end">{{ stat.rejected }}</td>
-                                <td class="text-end">{{ (stat.rejected / stat.total * 100)|round(1) }}%</td>
-                            </tr>
-                        </tbody>
-                    </table>
+    {% if ns.total_all > 0 %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><h6 class="mb-0">Overall Funnel</h6></div>
+                <div class="card-body">
+                    <canvas id="funnelChart" 
+                            data-applied="{{ ns.app_all }}"
+                            data-shortlisted="{{ ns.short_all }}"
+                            data-interview="{{ ns.int_all }}"
+                            data-selected="{{ ns.sel_all }}"
+                            data-rejected="{{ ns.rej_all }}"></canvas>
                 </div>
-                {% endif %}
             </div>
         </div>
-        {% endfor %}
-        {% else %}
-        <div class="alert alert-info">
-            No listings yet. <a href="{{ url_for('company_create_job') }}">Publish your first listing</a>.
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column justify-content-center text-center">
+                    <h4>{{ ns.total_all }} total applications</h4>
+                    <p class="mb-0">
+                        <span class="text-success fw-bold">{{ ns.sel_all }}</span> selected ·
+                        <span class="text-danger fw-bold">{{ ns.rej_all }}</span> rejected
+                    </p>
+                </div>
+            </div>
         </div>
-        {% endif %}
     </div>
-</div>
+    {% endif %}
 
-<div class="row">
-    <div class="col-12">
-        <a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    {% for stat_entry in job_stats %}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between">
+            <strong>{{ stat_entry.job.job_title }}</strong>
+            <small class="text-muted">{{ stat_entry.job.status }} · Deadline: {{ stat_entry.job.application_deadline }}</small>
+        </div>
+        <div class="card-body">
+            {% if stat_entry.total > 0 %}
+            <div class="row text-center">
+                <div class="col"><h5>{{ stat_entry.total }}</h5><small class="text-muted">Total</small></div>
+                <div class="col"><h5 class="text-secondary">{{ stat_entry.applied }}</h5><small class="text-muted">Applied</small></div>
+                <div class="col"><h5 class="text-info">{{ stat_entry.shortlisted }}</h5><small class="text-muted">Shortlisted</small></div>
+                <div class="col"><h5 class="text-warning">{{ stat_entry.interview }}</h5><small class="text-muted">Interview</small></div>
+                <div class="col"><h5 class="text-success">{{ stat_entry.selected }}</h5><small class="text-muted">Selected</small></div>
+                <div class="col"><h5 class="text-danger">{{ stat_entry.rejected }}</h5><small class="text-muted">Rejected</small></div>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No applications yet</p>
+            {% endif %}
+        </div>
     </div>
+    {% endfor %}
+{% else %}
+<div class="alert alert-info">
+    No listings yet. <a href="{{ url_for('company_create_job') }}">Post your first job</a>.
 </div>
+{% endif %}
+
+<a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary mt-2">← Dashboard</a>
+{% endblock %}
+
+{% block scripts %}
+{% if job_stats %}
+<script>
+var funnelCanvas = document.getElementById('funnelChart');
+if (funnelCanvas) {
+    var funnelLabels = ['Applied', 'Shortlisted', 'Interview', 'Selected', 'Rejected'];
+    var funnelTotals = [
+        parseInt(funnelCanvas.getAttribute('data-applied')) || 0,
+        parseInt(funnelCanvas.getAttribute('data-shortlisted')) || 0,
+        parseInt(funnelCanvas.getAttribute('data-interview')) || 0,
+        parseInt(funnelCanvas.getAttribute('data-selected')) || 0,
+        parseInt(funnelCanvas.getAttribute('data-rejected')) || 0
+    ];
+    new Chart(funnelCanvas, {
+        type: 'bar',
+        data: {
+            labels: funnelLabels,
+            datasets: [{
+                label: 'Applicants',
+                data: funnelTotals,
+                backgroundColor: ['#a0aec0', '#4299e1', '#dd6b20', '#38a169', '#e53e3e']
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+}
+</script>
+{% endif %}
 {% endblock %}

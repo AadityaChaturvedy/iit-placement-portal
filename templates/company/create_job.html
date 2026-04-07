@@ -3,87 +3,81 @@
 {% block title %}Post New Job{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Post New Job</h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('company_jobs') }}">Jobs</a></li>
-                <li class="breadcrumb-item active">Create</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+<h2 class="mb-3">Post a New Job</h2>
 
 <div class="row">
-    <div class="col-md-8 mx-auto">
+    <div class="col-md-8">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Job Details</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('company_create_job') }}">
+            <div class="card-body p-4">
+                <form method="POST" id="jobForm">
                     <div class="mb-3">
                         <label for="job_title" class="form-label">Job Title *</label>
-                        <input type="text" class="form-control" id="job_title"
-                               name="job_title" required
-                               placeholder="e.g., Software Engineer">
+                        <input type="text" class="form-control" id="job_title" name="job_title"
+                               placeholder="e.g. Software Engineer Intern" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="job_description" class="form-label">Job Description *</label>
-                        <textarea class="form-control" id="job_description"
-                                  name="job_description" rows="5" required
-                                  placeholder="Describe the role, responsibilities, and requirements..."></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="eligibility_criteria" class="form-label">Eligibility Criteria</label>
-                        <textarea class="form-control" id="eligibility_criteria"
-                                  name="eligibility_criteria" rows="3"
-                                  placeholder="e.g., Minimum CGPA 7.0, B.Tech in CS/IT"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="required_skills" class="form-label">Required Skills</label>
-                        <input type="text" class="form-control" id="required_skills"
-                               name="required_skills"
-                               placeholder="e.g., Python, Java, SQL, Machine Learning">
+                        <label for="job_description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="job_description" name="job_description"
+                                  rows="5" required placeholder="Describe the role, responsibilities..."></textarea>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="experience_required" class="form-label">Experience Required</label>
-                            <input type="text" class="form-control" id="experience_required"
-                                   name="experience_required"
-                                   placeholder="e.g., 0-2 years or Freshers">
+                            <label for="eligibility_criteria" class="form-label">Eligibility</label>
+                            <textarea class="form-control" id="eligibility_criteria" name="eligibility_criteria"
+                                      rows="2" placeholder="Min CGPA, branches allowed, etc."></textarea>
                         </div>
-
                         <div class="col-md-6 mb-3">
-                            <label for="salary_range" class="form-label">Salary Range</label>
-                            <input type="text" class="form-control" id="salary_range"
-                                   name="salary_range"
-                                   placeholder="e.g., 6-8 LPA">
+                            <label for="required_skills" class="form-label">Required Skills</label>
+                            <textarea class="form-control" id="required_skills" name="required_skills"
+                                      rows="2" placeholder="Python, SQL, etc."></textarea>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="application_deadline" class="form-label">Application Deadline *</label>
-                        <input type="date" class="form-control" id="application_deadline"
-                               name="application_deadline" required>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="experience_required" class="form-label">Experience</label>
+                            <input type="text" class="form-control" id="experience_required"
+                                   name="experience_required" placeholder="Fresher / 1-2 yrs">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="salary_range" class="form-label">Package (CTC)</label>
+                            <input type="text" class="form-control" id="salary_range"
+                                   name="salary_range" placeholder="6-8 LPA">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="application_deadline" class="form-label">Deadline *</label>
+                            <input type="date" class="form-control" id="application_deadline"
+                                   name="application_deadline" required>
+                        </div>
                     </div>
 
-                    <div class="alert alert-info">
-                        <strong>Heads up:</strong> This job goes to the admin review queue first.
-                        Students can apply after it is approved.
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Post Job</button>
-                    <a href="{{ url_for('company_jobs') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">Submit for Review</button>
+                    <a href="{{ url_for('company_jobs') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
                 </form>
             </div>
         </div>
     </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6>Tips</h6>
+                <ul class="small text-muted mb-0">
+                    <li>Be specific about the role</li>
+                    <li>Mention the interview process</li>
+                    <li>Jobs need admin approval before going live</li>
+                    <li>Set a realistic deadline</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var deadlinePicker = document.getElementById('application_deadline');
+deadlinePicker.min = new Date().toISOString().split('T')[0];
+</script>
 {% endblock %}

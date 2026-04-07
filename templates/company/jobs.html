@@ -1,94 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Jobs{% endblock %}
+{% block title %}My Job Listings{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Manage Job Postings</h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Jobs</li>
-            </ol>
-        </nav>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Jobs</h2>
+    <a href="{{ url_for('company_create_job') }}" class="btn btn-success">+ New Job</a>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <a href="{{ url_for('company_create_job') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Post New Job
-        </a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">All Job Postings ({{ jobs|length }})</h5>
+{% if jobs %}
+{% for job in jobs %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h5 class="mb-1">{{ job.job_title }}</h5>
+                <p class="text-muted mb-2">
+                    Deadline: {{ job.application_deadline }}
+                    {% if job.is_expired %}<span class="badge bg-dark ms-1">Expired</span>{% endif %}
+                    {% if job.days_left is not none and not job.is_expired %}
+                        · {{ job.days_left }} days left
+                    {% endif %}
+                </p>
             </div>
-            <div class="card-body">
-                {% if jobs %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Job Title</th>
-                                <th>Deadline</th>
-                                <th>Status</th>
-                                <th>Applications</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for job in jobs %}
-                            <tr>
-                                <td>{{ job.id }}</td>
-                                <td>{{ job.job_title }}</td>
-                                <td>{{ job.application_deadline }}</td>
-                                <td>
-                                    {% if job.status == 'Approved' %}
-                                        <span class="badge bg-success">Approved</span>
-                                    {% elif job.status == 'Rejected' %}
-                                        <span class="badge bg-danger">Rejected</span>
-                                    {% elif job.status == 'Closed' %}
-                                        <span class="badge bg-secondary">Closed</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ job.applications|length }}</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ url_for('company_edit_job', job_id=job.id) }}"
-                                           class="btn btn-primary">Edit</a>
-
-                                        {% if job.status != 'Closed' %}
-                                        <a href="{{ url_for('company_close_job', job_id=job.id) }}"
-                                           class="btn btn-warning"
-                                           onclick="return confirm('Close this job posting?')">Close</a>
-                                        {% endif %}
-
-                                        <a href="{{ url_for('company_delete_job', job_id=job.id) }}"
-                                           class="btn btn-danger"
-                                           onclick="return confirm('Delete this job permanently?')">Delete</a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    Your team has not published any listing yet. <a href="{{ url_for('company_create_job') }}">Create the first one</a>
-                </div>
+            <div>
+                {% if job.status == 'Approved' %}
+                    <span class="badge bg-success">Active</span>
+                {% elif job.status == 'Pending' %}
+                    <span class="badge bg-warning text-dark">Pending Approval</span>
+                {% elif job.status == 'Closed' %}
+                    <span class="badge bg-secondary">Closed</span>
+                {% elif job.status == 'Rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
                 {% endif %}
             </div>
         </div>
+        <div class="d-flex gap-2 mt-2">
+            <a href="{{ url_for('company_edit_job', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+            {% if job.status == 'Approved' %}
+            <a href="{{ url_for('company_close_job', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">Close</a>
+            {% endif %}
+            <a href="{{ url_for('company_delete_job', job_id=job.id) }}" class="btn btn-sm btn-outline-danger"
+               onclick="return confirm('Sure you want to delete {{ job.job_title }}?')">Delete</a>
+        </div>
     </div>
 </div>
+{% endfor %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <p>You haven't posted any jobs yet.</p>
+    <a href="{{ url_for('company_create_job') }}" class="btn btn-success">Post Your First Job</a>
+</div>
+{% endif %}
+
+<a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary mt-2">← Dashboard</a>
 {% endblock %}

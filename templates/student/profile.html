@@ -1,109 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}Profile{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>My Profile</h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('student_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                <li class="breadcrumb-item active">Profile Settings</li>
-            </ol>
-        </nav>
+<h2 class="mb-3">My Profile</h2>
+
+<div class="card">
+    <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data" id="profileForm">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Student ID</label>
+                    <input type="text" class="form-control" value="{{ student.student_id }}" disabled>
+                    <div class="form-text">Can't change your ID</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email_display" class="form-label">Email</label>
+                    <input type="text" class="form-control" value="{{ student.email }}" disabled id="email_display">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="contact" class="form-label">Phone</label>
+                    <input type="tel" class="form-control" id="contact" name="contact" value="{{ student.contact }}">
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="degree" class="form-label">Degree</label>
+                    <input type="text" class="form-control" id="degree" name="degree" 
+                           value="{{ student.degree or '' }}" placeholder="B.Tech">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="branch" class="form-label">Branch</label>
+                    <input type="text" class="form-control" id="branch" name="branch" 
+                           value="{{ student.branch or '' }}">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="cgpa" class="form-label">CGPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="form-control" 
+                           id="cgpa" name="cgpa" value="{{ student.cgpa or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="graduation_year" class="form-label">Graduation Year</label>
+                    <input type="number" class="form-control" id="graduation_year" 
+                           name="graduation_year" value="{{ student.graduation_year or '' }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="skills" class="form-label">Skills</label>
+                <textarea class="form-control" id="skills" name="skills" rows="2">{{ student.skills or '' }}</textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label for="resume" class="form-label">Resume</label>
+                {% if student.resume_path %}
+                <div class="mb-2">
+                    <span class="badge bg-success">Current:</span> 
+                    <a href="{{ url_for('static', filename='uploads/resumes/' + student.resume_path) }}" 
+                       target="_blank">{{ student.resume_path }}</a>
+                </div>
+                {% endif %}
+                <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx">
+                <div class="form-text">Upload a new file to replace the existing one</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+        </form>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-9 mx-auto">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white border-0">
-                <h5 class="mb-0"><i class="bi bi-person-fill"></i> Update Profile Details</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('student_profile') }}" enctype="multipart/form-data">
-                    <div class="row">
-                        <!-- ID & Email shouldn't realistically change easily -->
-                        <div class="col-md-6 mb-3">
-                            <label for="student_id" class="form-label text-muted">Roll No / ID (Immutable)</label>
-                            <input type="text" class="form-control bg-light" id="student_id" value="{{ student.student_id }}" disabled>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label text-muted">Email (Immutable)</label>
-                            <input type="email" class="form-control bg-light" id="email" value="{{ student.email }}" disabled>
-                        </div>
-                    </div>
-                    
-                    <hr class="text-muted">
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label fw-bold">Full Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="contact" class="form-label fw-bold">Mobile Number *</label>
-                            <input type="tel" class="form-control" id="contact" name="contact" value="{{ student.contact }}" required>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="degree" class="form-label">Degree</label>
-                            <input type="text" class="form-control" id="degree" name="degree" value="{{ student.degree or '' }}" placeholder="e.g. B.Tech">
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="branch" class="form-label">Branch / Department</label>
-                            <input type="text" class="form-control" id="branch" name="branch" value="{{ student.branch or '' }}">
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="cgpa" class="form-label">CGPA</label>
-                            <!-- Allows up to two decimal points -->
-                            <input type="number" step="0.01" min="0" max="10" class="form-control" id="cgpa" name="cgpa" value="{{ student.cgpa or '' }}" placeholder="Out of 10">
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="graduation_year" class="form-label">Graduation Year</label>
-                            <input type="number" min="2000" max="2100" class="form-control" id="graduation_year" name="graduation_year" value="{{ student.graduation_year or '' }}">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="skills" class="form-label fw-bold">Technical Skills</label>
-                        <textarea class="form-control" id="skills" name="skills" rows="3" placeholder="Python, Web Dev, Pandas...">{{ student.skills or '' }}</textarea>
-                        <small class="form-text text-muted">Separate your core skills with commas. HR reps often search for these exact keywords!</small>
-                    </div>
-                    
-                    <div class="mb-4 p-3 bg-light rounded border">
-                        <label for="resume" class="form-label fw-bold">Upload Resume File</label>
-                        
-                        {% if student.resume_path %}
-                        <div class="mb-3 d-flex align-items-center gap-3">
-                            <span class="badge bg-success py-2"><i class="bi bi-file-earmark-check"></i> File Loaded</span>
-                            <a href="{{ url_for('static', filename='uploads/resumes/' + student.resume_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                Preview Resume
-                            </a>
-                        </div>
-                        {% endif %}
-                        
-                        <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx">
-                        <small class="form-text text-muted mt-2 d-block">Submitting a new file will overwrite your old one! (Max 16MB. Only PDF, DOC, DOCX allowed).</small>
-                    </div>
-                    
-                    <div class="d-flex gap-2 justify-content-end">
-                        <a href="{{ url_for('student_dashboard') }}" class="btn btn-light px-4 border">Cancel</a>
-                        <button type="submit" class="btn btn-primary px-5 fw-bold"><i class="bi bi-save"></i> Save Profile</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary mt-3">← Dashboard</a>
 {% endblock %}

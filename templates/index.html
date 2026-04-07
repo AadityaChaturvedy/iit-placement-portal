@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Placement Portal{% endblock %}
+{% block title %}Home - IIT Placement Portal{% endblock %}
 
 {% block content %}
 <div class="row mt-5">
     <div class="col-md-8 mx-auto text-center">
-        <h1>IIT Placement Portal</h1>
-        <p class="lead">One place to handle student registrations, company drives, and final hiring updates.</p>
+        <h1 class="fw-bold">IIT Placement Portal</h1>
+        <p class="lead text-muted mt-3">One place to handle student registrations, company drives, and final hiring updates.</p>
         
         {% if not session.user_id %}
-        <div class="mt-4">
-            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-2">Sign in</a>
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-success btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4">Sign in</a>
+            <div class="dropdown">
+                <button class="btn btn-success btn-lg dropdown-toggle px-4" type="button" data-bs-toggle="dropdown">
                     Create account
                 </button>
                 <ul class="dropdown-menu">
@@ -24,11 +24,11 @@
         {% else %}
         <div class="mt-4">
             {% if session.user_role == 'admin' %}
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">Open Dashboard</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
             {% elif session.user_role == 'company' %}
-                <a href="{{ url_for('company_dashboard') }}" class="btn btn-primary btn-lg">Open Dashboard</a>
+                <a href="{{ url_for('company_dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
             {% elif session.user_role == 'student' %}
-                <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">Open Dashboard</a>
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
             {% endif %}
         </div>
         {% endif %}

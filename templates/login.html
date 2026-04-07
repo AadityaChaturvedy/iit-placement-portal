@@ -1,46 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Placement Portal{% endblock %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="row mt-5">
-    <div class="col-md-6 mx-auto">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Login</h4>
+<section class="login-hero">
+    <div class="login-orb login-orb-one"></div>
+    <div class="login-orb login-orb-two"></div>
+
+    <div class="login-hero-header">
+        <p class="login-kicker mb-2">IIT Placement Portal</p>
+        <h1 class="login-title mb-2">Launch Your Placement Journey</h1>
+        <p class="login-subtitle mb-0">Sign in to manage applications, interviews, and outcomes from one workspace.</p>
+    </div>
+
+    <div class="bento-login-grid">
+        <article class="bento-card bento-form-card">
+            <div class="bento-card-head">
+                <h2 class="h4 mb-1">Welcome Back</h2>
+                <p class="text-muted mb-0">Choose your role and continue.</p>
             </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('login') }}">
-                    <div class="mb-3">
-                        <label for="role" class="form-label">Login As</label>
-                        <select class="form-select" id="role" name="role" required>
-                            <option value="">Select Role</option>
-                            <option value="admin">Admin</option>
-                            <option value="company">Company</option>
-                            <option value="student">Student</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
-                </form>
-                
-                <div class="mt-3 text-center">
-                    <p>Don't have an account?</p>
-                    <a href="{{ url_for('student_register') }}" class="btn btn-outline-success me-2">Register as Student</a>
-                    <a href="{{ url_for('company_register') }}" class="btn btn-outline-success">Register as Company</a>
+
+            <form method="POST" action="{{ url_for('login') }}" id="loginForm" class="mt-3">
+                <div class="mb-3">
+                    <label for="role" class="form-label">Login As</label>
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="">-- Select Role --</option>
+                        <option value="admin">Admin</option>
+                        <option value="company">Company</option>
+                        <option value="student">Student</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" id="loginBtn">Login</button>
+            </form>
+
+            <hr>
+            <div>
+                <small class="text-muted">Don't have an account?</small>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                    <a href="{{ url_for('student_register') }}" class="btn btn-outline-success btn-sm">Register as Student</a>
+                    <a href="{{ url_for('company_register') }}" class="btn btn-outline-success btn-sm">Register as Company</a>
                 </div>
             </div>
-        </div>
+        </article>
     </div>
-</div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    var selectedRole = document.getElementById('role').value;
+    var emailInput = document.getElementById('email').value.trim();
+
+    if (!selectedRole) {
+        e.preventDefault();
+        alert('Please select a role first');
+        return;
+    }
+    if (!emailInput.includes('@')) {
+        e.preventDefault();
+        alert('Enter a valid email address');
+        return;
+    }
+});
+</script>
 {% endblock %}

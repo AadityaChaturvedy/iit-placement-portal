@@ -3,68 +3,33 @@
 {% block title %}Placement Records{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Placement Records</h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('admin_reports') }}">Reports</a></li>
-                <li class="breadcrumb-item active">Placement Records</li>
-            </ol>
-        </nav>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Placement Records</h2>
+    <a href="{{ url_for('admin_export_placements') }}" class="btn btn-outline-dark btn-sm">
+        ↓ Download CSV
+    </a>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-success">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">All Successful Placements ({{ placements|length }})</h5>
-            </div>
-            <div class="card-body">
-                {% if placements %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Application ID</th>
-                                <th>Student Name</th>
-                                <th>Student ID</th>
-                                <th>Job Title</th>
-                                <th>Company</th>
-                                <th>Applied On</th>
-                                <th>Selected On</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for placement in placements %}
-                            <tr>
-                                <td>{{ placement.id }}</td>
-                                <td>{{ placement.student.name }}</td>
-                                <td>{{ placement.student.student_id }}</td>
-                                <td>{{ placement.job_position.job_title }}</td>
-                                <td>{{ placement.job_position.company.company_name }}</td>
-                                <td>{{ placement.application_date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ placement.updated_at.strftime('%Y-%m-%d') }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    No final selections have been recorded yet.
-                </div>
-                {% endif %}
-            </div>
-        </div>
+{% if placements %}
+{% for placed_student in placements %}
+<div class="card mb-2">
+    <div class="card-body py-2">
+        <dl class="row mb-0">
+            <dt class="col-sm-2">Student</dt>
+            <dd class="col-sm-4">{{ placed_student.student.name }} ({{ placed_student.student_id }})</dd>
+            <dt class="col-sm-2">Company</dt>
+            <dd class="col-sm-4">{{ placed_student.job_position.company.company_name }}</dd>
+            <dt class="col-sm-2">Position</dt>
+            <dd class="col-sm-4">{{ placed_student.job_position.job_title }}</dd>
+            <dt class="col-sm-2">Date</dt>
+            <dd class="col-sm-4">{{ placed_student.updated_at.strftime('%d %b %Y') if placed_student.updated_at else 'N/A' }}</dd>
+        </dl>
     </div>
 </div>
+{% endfor %}
+{% else %}
+<div class="alert alert-info">No placements recorded yet.</div>
+{% endif %}
 
-<div class="row">
-    <div class="col-12">
-        <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary">Back to Reports</a>
-    </div>
-</div>
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">← Dashboard</a>
 {% endblock %}

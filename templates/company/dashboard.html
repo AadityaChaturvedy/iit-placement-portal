@@ -3,134 +3,78 @@
 {% block title %}Company Dashboard{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Company Dashboard</h2>
-        <p class="text-muted">Welcome back, {{ company.company_name }}. Here is your hiring pipeline summary.</p>
-        <hr>
-    </div>
+<div class="dashboard-greeting mb-4">
+    <h2>{{ company.company_name }}</h2>
+    <p class="text-muted mb-0">Company Dashboard</p>
 </div>
-<div class="row mb-4">
+
+<div class="row mb-4 g-3">
     <div class="col-md-4">
         <div class="card bg-primary text-white">
             <div class="card-body">
-                <h5 class="card-title">Total Listings</h5>
-                <h2>{{ total_jobs }}</h2>
+                <div class="small opacity-75">Total Jobs</div>
+                <h2 class="mb-0">{{ total_jobs }}</h2>
             </div>
         </div>
     </div>
-
     <div class="col-md-4">
         <div class="card bg-success text-white">
             <div class="card-body">
-                <h5 class="card-title">Live Listings</h5>
-                <h2>{{ active_jobs }}</h2>
+                <div class="small opacity-75">Active Jobs</div>
+                <h2 class="mb-0">{{ active_jobs }}</h2>
             </div>
         </div>
     </div>
-
     <div class="col-md-4">
         <div class="card bg-info text-white">
             <div class="card-body">
-                <h5 class="card-title">Applications Received</h5>
-                <h2>{{ total_applications }}</h2>
+                <div class="small opacity-75">Total Applications</div>
+                <h2 class="mb-0">{{ total_applications }}</h2>
             </div>
         </div>
     </div>
 </div>
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Company Details</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Company Name:</strong> {{ company.company_name }}</p>
-                <p><strong>Email:</strong> {{ company.email }}</p>
-                <p><strong>HR Contact:</strong> {{ company.hr_contact }}</p>
-                <p>
-                    <strong>Website:</strong>
-                    {% if company.website %}
-                        <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </p>
-                <p><strong>Industry:</strong> {{ company.industry or 'N/A' }}</p>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Next Steps</h5>
-            </div>
-            <div class="card-body">
-                <a href="{{ url_for('company_create_job') }}" class="btn btn-primary btn-lg w-100 mb-2">
-                    Publish New Listing
-                </a>
-                <a href="{{ url_for('company_jobs') }}" class="btn btn-outline-primary w-100 mb-2">
-                    Manage Listings
-                </a>
-                <a href="{{ url_for('company_applications') }}" class="btn btn-outline-info w-100 mb-2">
-                    Review Applications
-                </a>
-                <a href="{{ url_for('company_shortlisted') }}" class="btn btn-outline-success w-100 mb-2">
-                    Track Shortlisted Candidates
-                </a>
-                <a href="{{ url_for('company_analytics') }}" class="btn btn-outline-warning w-100">
-                    View Analytics
-                </a>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Quick Actions</h6></div>
+            <div class="card-body d-flex flex-column gap-2">
+                <a href="{{ url_for('company_create_job') }}" class="btn btn-success">+ Post New Job</a>
+                <a href="{{ url_for('company_jobs') }}" class="btn btn-outline-primary">My Listings</a>
+                <a href="{{ url_for('company_applications') }}" class="btn btn-outline-info">Applications</a>
+                <a href="{{ url_for('company_shortlisted') }}" class="btn btn-outline-warning">Shortlisted</a>
+                <a href="{{ url_for('company_analytics') }}" class="btn btn-outline-secondary">Analytics</a>
+                <a href="{{ url_for('company_profile') }}" class="btn btn-outline-dark">Profile</a>
             </div>
         </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Recent Listings</h5>
-            </div>
-            <div class="card-body">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header"><h6 class="mb-0">Recent Listings</h6></div>
+            <div class="card-body p-0">
                 {% if recent_jobs %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Job Title</th>
-                                <th>Status</th>
-                                <th>Deadline</th>
-                                <th>Applications</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for job in recent_jobs %}
-                            <tr>
-                                <td>{{ job.job_title }}</td>
-                                <td>
-                                    {% if job.status == 'Approved' %}
-                                        <span class="badge bg-success">Approved</span>
-                                    {% elif job.status == 'Rejected' %}
-                                        <span class="badge bg-danger">Rejected</span>
-                                    {% elif job.status == 'Closed' %}
-                                        <span class="badge bg-secondary">Closed</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">In Review</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ job.application_deadline }}</td>
-                                <td>{{ job.applications|length }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="list-group list-group-flush">
+                    {% for job in recent_jobs %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ job.job_title }}</strong>
+                            <br><small class="text-muted">Deadline: {{ job.application_deadline }} · 
+                            {% if job.status == 'Approved' %}
+                                <span class="text-success">Active</span>
+                            {% elif job.status == 'Pending' %}
+                                <span class="text-warning">Pending</span>
+                            {% else %}
+                                {{ job.status }}
+                            {% endif %}
+                            </small>
+                        </div>
+                        <a href="{{ url_for('company_edit_job', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    </div>
+                    {% endfor %}
                 </div>
-                <a href="{{ url_for('company_jobs') }}" class="btn btn-sm btn-outline-primary">See All Listings</a>
                 {% else %}
-                <div class="alert alert-info">
-                    No listings published yet. <a href="{{ url_for('company_create_job') }}">Create your first listing</a>
-                </div>
+                <div class="p-3 text-muted">No jobs posted yet. Create your first listing!</div>
                 {% endif %}
             </div>
         </div>

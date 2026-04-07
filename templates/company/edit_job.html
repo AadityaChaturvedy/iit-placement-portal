@@ -3,76 +3,50 @@
 {% block title %}Edit Job{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>Edit Job Posting</h2>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('company_jobs') }}">Jobs</a></li>
-                <li class="breadcrumb-item active">Edit</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+<h2 class="mb-3">Edit: {{ job.job_title }}</h2>
 
-<div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Edit Job Details</h5>
+<div class="card">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="job_title" class="form-label">Job Title</label>
+                <input type="text" class="form-control" name="job_title" value="{{ job.job_title }}" required>
             </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('company_edit_job', job_id=job.id) }}">
-                    <div class="mb-3">
-                        <label for="job_title" class="form-label">Job Title *</label>
-                        <input type="text" class="form-control" id="job_title"
-                               name="job_title" required value="{{ job.job_title }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="job_description" class="form-label">Job Description *</label>
-                        <textarea class="form-control" id="job_description"
-                                  name="job_description" rows="5" required>{{ job.job_description }}</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="eligibility_criteria" class="form-label">Eligibility Criteria</label>
-                        <textarea class="form-control" id="eligibility_criteria"
-                                  name="eligibility_criteria" rows="3">{{ job.eligibility_criteria or '' }}</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="required_skills" class="form-label">Required Skills</label>
-                        <input type="text" class="form-control" id="required_skills"
-                               name="required_skills" value="{{ job.required_skills or '' }}">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="experience_required" class="form-label">Experience Required</label>
-                            <input type="text" class="form-control" id="experience_required"
-                                   name="experience_required" value="{{ job.experience_required or '' }}">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="salary_range" class="form-label">Salary Range</label>
-                            <input type="text" class="form-control" id="salary_range"
-                                   name="salary_range" value="{{ job.salary_range or '' }}">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="application_deadline" class="form-label">Application Deadline *</label>
-                        <input type="date" class="form-control" id="application_deadline"
-                               name="application_deadline" required value="{{ job.application_deadline }}">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Update Job</button>
-                    <a href="{{ url_for('company_jobs') }}" class="btn btn-secondary">Cancel</a>
-                </form>
+            
+            <div class="mb-3">
+                <label for="job_description" class="form-label">Description</label>
+                <textarea class="form-control" name="job_description" rows="5" required>{{ job.job_description }}</textarea>
             </div>
-        </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Eligibility</label>
+                    <textarea class="form-control" name="eligibility_criteria" rows="2">{{ job.eligibility_criteria or '' }}</textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Skills</label>
+                    <textarea class="form-control" name="required_skills" rows="2">{{ job.required_skills or '' }}</textarea>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Experience</label>
+                    <input type="text" class="form-control" name="experience_required" value="{{ job.experience_required or '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Package</label>
+                    <input type="text" class="form-control" name="salary_range" value="{{ job.salary_range or '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Deadline</label>
+                    <input type="date" class="form-control" name="application_deadline" value="{{ job.application_deadline }}">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('company_jobs') }}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
     </div>
 </div>
 {% endblock %}
