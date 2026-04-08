@@ -70,4 +70,4 @@ A comprehensive, role-based web application designed to manage the end-to-end co
 
 ### Student Login
 
-For student login after registration the email address is: <Student ID>@iit.edu.in
+For student login after registration the email address is: "Student ID"@iit.edu.in
