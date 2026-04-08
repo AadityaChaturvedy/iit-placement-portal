@@ -10,14 +10,14 @@
                 <h4 class="mb-0">Student Registration</h4>
             </div>
             <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('student_register') }}"
-                      enctype="multipart/form-data" id="regForm" novalidate>
+                <form method="POST" action="{{ url_for('student_register') }}" enctype="multipart/form-data"
+                    id="regForm" novalidate>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="student_id" class="form-label">Student ID *</label>
                             <input type="text" class="form-control" id="student_id" name="student_id"
-                                   placeholder="e.g. CS2024001" required>
+                                placeholder="e.g. CS2024001" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="name" class="form-label">Full Name *</label>
@@ -28,20 +28,23 @@
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label for="contact" class="form-label">Phone *</label>
-                            <input type="tel" class="form-control" id="contact" name="contact" required>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="country_code" placeholder="+91" maxlength="4" style="max-width: 80px;" required>
+                                <input type="tel" class="form-control" id="contact" name="contact" maxlength="15" required>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label">Password *</label>
-                            <input type="password" class="form-control" id="password" name="password"
-                                   minlength="6" required>
+                            <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+                            <div class="form-text" style="font-size: 0.8em;">Min 8 chars, 1 uppercase, 1 lowercase, 1 number.</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="confirm_password" class="form-label">Confirm Password *</label>
-                            <input type="password" class="form-control" id="confirm_password"
-                                   name="confirm_password" required>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                                required>
                         </div>
                     </div>
 
@@ -55,33 +58,33 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="branch" class="form-label">Branch</label>
-                            <input type="text" class="form-control" id="branch" name="branch" placeholder="Computer Science">
+                            <input type="text" class="form-control" id="branch" name="branch"
+                                placeholder="Computer Science">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="cgpa" class="form-label">CGPA</label>
-                            <input type="number" step="0.01" min="0" max="10" class="form-control"
-                                   id="cgpa" name="cgpa" placeholder="8.5">
+                            <input type="number" step="0.01" min="0" max="10" class="form-control" id="cgpa" name="cgpa"
+                                placeholder="8.5">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="graduation_year" class="form-label">Graduation Year</label>
-                            <input type="number" class="form-control" id="graduation_year"
-                                   name="graduation_year" placeholder="2028" min="2020" max="2035">
+                            <input type="number" class="form-control" id="graduation_year" name="graduation_year"
+                                placeholder="2028" min="2020" max="2035">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="skills" class="form-label">Skills</label>
                         <textarea class="form-control" id="skills" name="skills" rows="2"
-                                  placeholder="Python, Java, Machine Learning..."></textarea>
+                            placeholder="Python, Java, Machine Learning..."></textarea>
                     </div>
 
                     <div class="mb-4">
                         <label for="resume" class="form-label">Resume</label>
-                        <input type="file" class="form-control" id="resume" name="resume"
-                               accept=".pdf,.doc,.docx">
+                        <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx">
                         <div class="form-text">PDF, DOC, or DOCX — max 16MB</div>
                     </div>
 
@@ -101,38 +104,44 @@
 
 {% block scripts %}
 <script>
-(function() {
-    var registrationForm = document.getElementById('regForm');
+    (function () {
+        var registrationForm = document.getElementById('regForm');
 
-    registrationForm.addEventListener('submit', function(e) {
-        var passwordField = document.getElementById('password').value;
-        var confirmField = document.getElementById('confirm_password').value;
+        registrationForm.addEventListener('submit', function (e) {
+            var passwordField = document.getElementById('password').value;
+            var confirmField = document.getElementById('confirm_password').value;
 
-        if (passwordField.length < 6) {
-            e.preventDefault();
-            alert('Password must be at least 6 characters');
-            return;
-        }
-
-        if (passwordField !== confirmField) {
-            e.preventDefault();
-            alert('Passwords do not match!');
-            document.getElementById('confirm_password').focus();
-            return;
-        }
-
-        var cgpaField = document.getElementById('cgpa');
-        if (cgpaField.value) {
-            var cgpaValue = parseFloat(cgpaField.value);
-            // console.log('cgpa entered:', cgpaValue);
-            if (cgpaValue < 0 || cgpaValue > 10) {
+            if (passwordField.length < 8) {
                 e.preventDefault();
-                alert('CGPA should be between 0 and 10');
-                cgpaField.focus();
+                alert('Password must be at least 8 characters');
                 return;
             }
-        }
-    });
-})();
+
+            if (!/[A-Z]/.test(passwordField) || !/[a-z]/.test(passwordField) || !/[0-9]/.test(passwordField)) {
+                e.preventDefault();
+                alert('Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.');
+                return;
+            }
+
+            if (passwordField !== confirmField) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                document.getElementById('confirm_password').focus();
+                return;
+            }
+
+            var cgpaField = document.getElementById('cgpa');
+            if (cgpaField.value) {
+                var cgpaValue = parseFloat(cgpaField.value);
+                // console.log('cgpa entered:', cgpaValue);
+                if (cgpaValue < 0 || cgpaValue > 10) {
+                    e.preventDefault();
+                    alert('CGPA should be between 0 and 10');
+                    cgpaField.focus();
+                    return;
+                }
+            }
+        });
+    })();
 </script>
 {% endblock %}

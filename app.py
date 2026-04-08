@@ -13,7 +13,7 @@ from sqlalchemy import or_, func
 
 from models import db, Admin, Company, Student, JobPosition, Application, Placement
 from config import Config
-from helpers import allowed_file, grab_user, bail
+from helpers import allowed_file, grab_user, bail, validate_password
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s [%(levelname)s] %(message)s')
@@ -211,12 +211,28 @@ def student_register():
     full_name     = form_data.get('name', '').strip()
     raw_password  = form_data.get('password')
     confirm_pwd   = form_data.get('confirm_password')
-    phone_number  = form_data.get('contact', '').strip()
+    country_code  = form_data.get('country_code', '').strip()
+    phone_raw     = form_data.get('contact', '').strip()
 
     email_address = f"{roll_number}@iit.edu.in" if roll_number else ""
 
-    if not all([roll_number, full_name, raw_password, confirm_pwd, phone_number]):
+    if not all([roll_number, full_name, raw_password, confirm_pwd, phone_raw, country_code]):
         flash('Please complete all mandatory fields.', 'danger')
+        return render_template('student_register.html')
+
+    phone_number = f"{country_code}{phone_raw}".strip()
+
+    if len(country_code.replace('+', '')) > 3:
+        flash('Country code can have a maximum of 3 digits.', 'danger')
+        return render_template('student_register.html')
+
+    if len(phone_number) > 15:
+        flash('Country code and phone number combined must not exceed 15 characters.', 'danger')
+        return render_template('student_register.html')
+
+    pwd_error = validate_password(raw_password)
+    if pwd_error:
+        flash(pwd_error, 'danger')
         return render_template('student_register.html')
 
     if raw_password != confirm_pwd:
@@ -285,10 +301,26 @@ def company_register():
     company_name  = reg_form.get('company_name', '').strip()
     company_email = reg_form.get('email', '').strip()
     raw_password  = reg_form.get('password')
-    hr_phone      = reg_form.get('hr_contact', '').strip()
+    country_code  = reg_form.get('country_code', '').strip()
+    hr_phone_base = reg_form.get('hr_contact', '').strip()
 
-    if not company_name or not company_email or not raw_password or not hr_phone:
+    if not company_name or not company_email or not raw_password or not hr_phone_base:
         flash('Fill in all required fields.', 'danger')
+        return render_template('company_register.html')
+
+    hr_phone = f"{country_code}{hr_phone_base}".strip()
+
+    if len(country_code.replace('+', '')) > 3:
+        flash('Country code can have a maximum of 3 digits.', 'danger')
+        return render_template('company_register.html')
+
+    if len(hr_phone) > 15:
+        flash('Country code and phone number combined must not exceed 15 characters.', 'danger')
+        return render_template('company_register.html')
+
+    pwd_error = validate_password(raw_password)
+    if pwd_error:
+        flash(pwd_error, 'danger')
         return render_template('company_register.html')
 
     if raw_password != reg_form.get('confirm_password'):

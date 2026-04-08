@@ -25,22 +25,28 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label">Password *</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+                            <div class="form-text" style="font-size: 0.8em;">Min 8 chars, 1 uppercase, 1 lowercase, 1 number.</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="confirm_password" class="form-label">Confirm *</label>
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <label for="confirm_password" class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                                required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="hr_contact" class="form-label">HR Contact Number *</label>
-                            <input type="tel" class="form-control" id="hr_contact" name="hr_contact" required>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="country_code" placeholder="+91" maxlength="4" style="max-width: 80px;">
+                                <input type="tel" class="form-control" id="hr_contact" name="hr_contact" maxlength="15" required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="website" class="form-label">Website</label>
-                            <input type="url" class="form-control" id="website" name="website" placeholder="https://...">
+                            <input type="url" class="form-control" id="website" name="website"
+                                placeholder="https://...">
                         </div>
                     </div>
 
@@ -61,7 +67,7 @@
                     <div class="mb-3">
                         <label for="description" class="form-label">Brief Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3"
-                                  placeholder="Tell us about your company..."></textarea>
+                            placeholder="Tell us about your company..."></textarea>
                     </div>
 
                     <div class="alert alert-info py-2">
@@ -82,13 +88,26 @@
 
 {% block scripts %}
 <script>
-document.getElementById('compRegForm').addEventListener('submit', function(e) {
-    var enteredPassword = document.getElementById('password').value;
-    var confirmedPassword = document.getElementById('confirm_password').value;
-    if (enteredPassword !== confirmedPassword) {
-        e.preventDefault();
-        alert('Passwords don\'t match');
-    }
-});
+    document.getElementById('compRegForm').addEventListener('submit', function (e) {
+        var enteredPassword = document.getElementById('password').value;
+        var confirmedPassword = document.getElementById('confirm_password').value;
+
+        if (enteredPassword.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters');
+            return;
+        }
+
+        if (!/[A-Z]/.test(enteredPassword) || !/[a-z]/.test(enteredPassword) || !/[0-9]/.test(enteredPassword)) {
+            e.preventDefault();
+            alert('Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.');
+            return;
+        }
+
+        if (enteredPassword !== confirmedPassword) {
+            e.preventDefault();
+            alert('Passwords don\'t match');
+        }
+    });
 </script>
 {% endblock %}
