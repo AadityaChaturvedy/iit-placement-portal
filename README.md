@@ -42,7 +42,7 @@ A comprehensive, role-based web application designed to manage the end-to-end co
 
 1. Navigate to the project directory:
    ```bash
-   cd IIT_Placement_Portal
+   cd iit-placement-portal
    ```
 
 2. Set up a virtual environment (recommended):
