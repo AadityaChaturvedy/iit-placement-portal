@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: IIT Placement Portal API
+  version: 1.0.0
+  description: API documentation for the IIT Placement Portal. The API uses session-based authentication (requires active login).
+paths:
+  /api/companies:
+    get:
+      tags:
+        - Admin
+      summary: Get all companies
+      description: Returns a list of all registered companies. Only accessible by Admin users.
+      responses:
+        '200':
+          description: Successful response containing a list of companies.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Forbidden (Admin role required).
+          
+  /api/students:
+    get:
+      tags:
+        - Admin
+      summary: Get all students
+      description: Returns a list of all registered students. Only accessible by Admin users.
+      responses:
+        '200':
+          description: Successful response containing a list of students.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Forbidden (Admin role required).
+
+  /api/jobs:
+    get:
+      tags:
+        - Jobs
+      summary: Get jobs list
+      description: Returns a list of jobs. For Admin, it returns all jobs. For Company, it returns their own jobs. For Student, it returns only approved jobs.
+      responses:
+        '200':
+          description: Successful response.
+        '401':
+          description: Authentication required.
+          
+    post:
+      tags:
+        - Jobs
+      summary: Create a newly posted job
+      description: Creates a new job posting. The job is initially set to "Pending" status for Admin approval. Only approved companies can create jobs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - job_title
+                - job_description
+                - application_deadline
+              properties:
+                job_title:
+                  type: string
+                job_description:
+                  type: string
+                eligibility_criteria:
+                  type: string
+                required_skills:
+                  type: string
+                experience_required:
+                  type: string
+                salary_range:
+                  type: string
+                application_deadline:
+                  type: string
+                  format: date
+                  description: YYYY-MM-DD
+      responses:
+        '201':
+          description: Job created and sent for admin approval.
+        '400':
+          description: Bad request (missing fields or invalid format).
+        '401':
+          description: Authentication required.
+        '403':
+          description: Forbidden (Company account not approved or blocklisted).
+
+  /api/applications:
+    get:
+      tags:
+        - Applications
+      summary: Get applications list
+      description: Returns a list of applications. Admin sees all, Company sees applications to their jobs, Student sees their own applications.
+      responses:
+        '200':
+          description: Successful response.
+        '401':
+          description: Authentication required.
+
+  /api/jobs/{job_id}/apply:
+    post:
+      tags:
+        - Student
+      summary: Apply to a job
+      description: Allows a student to apply for a specifically approved job.
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cover_letter:
+                  type: string
+      responses:
+        '201':
+          description: Application successfully submitted.
+        '400':
+          description: Job is not open for applications.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Forbidden (Only students can apply).
+        '409':
+          description: Conflict (Already applied).
+
+  /api/applications/{app_id}/status:
+    patch:
+      tags:
+        - Companies & Admins
+      summary: Update application status
+      description: Update the processing status of an application. Cannot be accessed by students.
+      parameters:
+        - in: path
+          name: app_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [Applied, Shortlisted, Interview, Selected, Rejected]
+      responses:
+        '200':
+          description: Application status updated successfully.
+        '400':
+          description: Invalid status value.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Application not found.
